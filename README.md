@@ -2,7 +2,7 @@
 
 纯前端、单页、可离线运行的交互演示。无后端、无数据库、无构建步骤。
 
-**在线地址**：https://reallllmihu.github.io/process-demo/
+**在线地址**：https://Hhhhu3494.github.io/process-demo/
 
 ## 目录结构
 
@@ -30,12 +30,12 @@ python -m http.server 8080
 
 ## 部署状态
 
-本仓库 `reallllmihu/process-demo` 已启用 GitHub Pages：
+本仓库 `Hhhhu3494/process-demo` 已启用 GitHub Pages：
 
 | 项 | 值 |
 |---|---|
 | 发布源 | `main` 分支 / `/(root)` |
-| 站点地址 | `https://reallllmihu.github.io/process-demo/` |
+| 站点地址 | `https://Hhhhu3494.github.io/process-demo/` |
 | 站点大小 | 约 2.2 MB，纯静态，无需构建 |
 | 外部请求 | 零，依赖全部在 `vendor/` |
 
@@ -46,21 +46,16 @@ python -m http.server 8080
 本仓库拟容纳多个前端演示。新增时请放在**独立子目录**，Pages 会按子路径提供，例如：
 
 ```
-https://reallllmihu.github.io/process-demo/contract-demo/
+https://Hhhhu3494.github.io/process-demo/contract-demo/
 ```
 
 当前 RAG Demo 位于仓库根目录，地址不带子路径。`.nojekyll` 保留在仓库根目录即可，子目录无需重复放置。
 
 ## 更新内容
 
-工作区根目录的 `index.html` 是**源文件**（CDN 版，方便本地开发）；本目录的 `index.html` 是**发布副本**（依赖本地化）。改完源文件后：
+本地工作区根目录的 `index.html` 是**源文件**（CDN 版，便于本地开发）；本仓库根目录的 `index.html` 是**发布副本**（依赖本地化）。两者不可混用：改动源文件后必须重新生成发布副本，否则线上不会变化。
 
-```bash
-node build-dist.mjs     # 重新生成发布副本（自动替换为 vendor/ 相对引用）
-cd dist && git add . && git commit -m "Update demo" && git push
-```
-
-命令行推送需要 GitHub Personal Access Token（classic，勾 `repo`）。建议设短有效期、用完即在 Developer settings → Tokens (classic) 中撤销；**令牌不要写进仓库里的任何文件**。
+维护者使用本地工作区的 `sync-github.mjs`（不随本仓库分发）完成同步：重新构建 → 离线包自检 → 比对远端差异 → 单个 commit 推送 → 站点验证。脚本支持 `--dry-run` 只自检不推送；推送凭据通过环境变量临时提供，**不写入仓库里的任何文件**，用完立即在 Developer settings → Tokens 中撤销。
 
 > 平台一键发布的线上链接是覆盖式更新，改完本地文件不会自动同步，需要显式重新发布。
 

@@ -18,6 +18,8 @@
       --wb-side:#1d5fe8; --wb-side-hover:#3b7bf0;   /* 导航栏蓝色（较浅） */
       --wb-bg:#f0f2f5; --wb-line:#e3e8ef; --wb-text:#1f2733; --wb-sub:#6b7785;
       --wb-red:#f5222d; --wb-yellow:#faad14; --wb-green:#52c41a;
+      /* 密度契约：主区内边距 / 区块间距 / 卡片内边距，平板与矮屏统一收紧 */
+      --wb-main-pad:18px; --wb-gap:14px; --wb-card-pad:14px;
     }
     *{ box-sizing:border-box; }
     html,body{ height:100%; margin:0; }
@@ -36,7 +38,7 @@
     @keyframes wbPulse { 0%{background:#fff7e6} 50%{background:#ffe7ba} 100%{background:#fff7e6} }
     .wb-row-hl td{ animation:wbPulse 1.3s ease-in-out infinite; }
     .wb-header{ background:#fff; border-bottom:1px solid var(--wb-line); display:flex; align-items:center; justify-content:space-between; padding:0 16px; height:56px; }
-    .wb-main{ padding:18px; overflow:auto; height:calc(100vh - 56px); }
+    .wb-main{ padding:var(--wb-main-pad); overflow:auto; height:calc(100vh - 56px); }
     .wb-head-left{ display:flex; align-items:center; gap:10px; min-width:0; }
     .wb-head-right{ display:flex; align-items:center; gap:14px; flex-shrink:0; }
     .wb-head-title{ font-weight:700; font-size:16px; white-space:nowrap; }
@@ -63,7 +65,7 @@
       .wb-side-mask{ display:block; position:fixed; inset:0; background:rgba(15,44,92,.35); z-index:1000; }
       .wb-hide-narrow{ display:none !important; }
       .wb-head-title{ font-size:15px; }
-      .wb-main{ padding:14px; }
+      .wb-main{ padding:var(--wb-main-pad); }
     }
     /* ===== 自适应：极小屏(≤768)登录页改为单列堆叠 ===== */
     @media (max-width:768px){
@@ -77,7 +79,28 @@
     .tag-low{ background:#e6f7e6; color:#389e0d; border:1px solid #b7eb8f; }
     .tag-mid{ background:#fff7e6; color:#d48806; border:1px solid #ffd591; }
     .tag-high{ background:#fff1f0; color:#cf1322; border:1px solid #ffa39e; }
-    .wb-chat{ height:calc(100vh - 56px - 220px); overflow:auto; padding:10px 4px; }
+    /* ===== 问答页：占满可视高度，消息区内部滚动，输入区常驻底部 ===== */
+    .wb-qa{ height:100%; min-height:0; display:flex; flex-direction:column; gap:var(--wb-gap); }
+    .wb-qa-top{ flex:0 0 auto; padding:12px 16px; }
+    .wb-qa-body{ flex:1 1 auto; min-height:0; display:flex; gap:var(--wb-gap); align-items:stretch; }
+    .wb-chat-card{ flex:1 1 auto; min-width:0; min-height:0; padding:var(--wb-card-pad); display:flex; flex-direction:column; }
+    .wb-ctx-bar{ flex:0 0 auto; background:#f7f9fc; border:1px solid var(--wb-line); border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+    .wb-chat{ flex:1 1 auto; min-height:0; height:auto; overflow:auto; padding:10px 4px; }
+    .wb-composer{ flex:0 0 auto; display:flex; gap:8px; margin-top:8px; }
+    .wb-composer-actions{ flex:0 0 auto; display:flex; gap:8px; margin-top:10px; }
+    .wb-case-card{ flex:0 0 300px; width:300px; min-height:0; padding:var(--wb-card-pad); overflow:auto; }
+    /* ===== 平板 / 矮屏：收紧纵向密度，一屏内完整看到输入区 ===== */
+    @media (max-height:900px), (max-width:1024px){
+      :root{ --wb-main-pad:10px; --wb-gap:10px; --wb-card-pad:10px; }
+      .wb-qa-top{ padding:8px 12px; }
+      .wb-ctx-bar{ padding:8px 10px; margin-bottom:8px; }
+      .wb-chat{ padding:6px 4px; }
+      .wb-bubble{ padding:8px 12px; margin-bottom:8px; }
+      .wb-composer{ margin-top:6px; }
+      .wb-composer-actions{ margin-top:6px; }
+      .wb-case-card{ flex-basis:280px; width:280px; }
+      .wb-section-title{ margin-bottom:8px; }
+    }
     .wb-bubble{ max-width:76%; padding:10px 14px; border-radius:10px; margin-bottom:12px; line-height:1.6; font-size:14px; white-space:pre-wrap; word-break:break-word; }
     .wb-bubble.user{ background:var(--wb-blue); color:#fff; margin-left:auto; border-bottom-right-radius:2px; }
     .wb-bubble.bot{ background:#f4f7fb; border:1px solid var(--wb-line); margin-right:auto; border-bottom-left-radius:2px; }
@@ -126,6 +149,21 @@
     .wb-stat{ flex:1; min-width:160px; background:#fff; border:1px solid var(--wb-line); border-radius:10px; padding:14px 16px; }
     .wb-stat .n{ font-size:26px; font-weight:800; }
     .wb-stat .l{ font-size:12px; color:var(--wb-sub); margin-top:2px; }
+    /* 可点击指标卡：跳转工单池对应 Tab，键盘可达 + 明确反馈 */
+    .wb-stat-link{ cursor:pointer; min-height:76px; transition:border-color .2s, box-shadow .2s, transform .2s; }
+    .wb-stat-link:hover{ border-color:var(--wb-blue); box-shadow:0 6px 18px rgba(29,78,216,.12); transform:translateY(-1px); }
+    .wb-stat-link:focus-visible{ outline:2px solid var(--wb-blue); outline-offset:2px; }
+    .wb-stat-link .l::after{ content:' \2192'; color:var(--wb-blue); font-weight:700; }
+    @media (max-width:768px){ .wb-stat-link{ min-height:44px; } }
+    /* 趋势图：纯 CSS 柱状图，零外部依赖 */
+    .wb-chart{ border:1px solid var(--wb-line); border-radius:10px; background:#fff; padding:14px 16px; }
+    .wb-chart-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .wb-chart-bars{ display:flex; align-items:flex-end; gap:10px; height:120px; border-bottom:1px solid var(--wb-line); padding:0 4px; }
+    .wb-chart-col{ flex:1; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }
+    .wb-chart-val{ font-size:11px; color:var(--wb-sub); line-height:14px; }
+    .wb-chart-bar{ width:100%; max-width:52px; background:var(--wb-blue); border-radius:4px 4px 0 0; transition:height .3s; }
+    .wb-chart-axis{ display:flex; gap:10px; padding:6px 4px 0; }
+    .wb-chart-x{ flex:1; min-width:0; text-align:center; font-size:11px; color:var(--wb-sub); white-space:nowrap; }
     .login-wrap{ height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#0f2c5c 0%,#1d4ed8 100%); }
     .login-box{ width:960px; max-width:94vw; background:#fff; border-radius:16px; overflow:hidden; display:flex; box-shadow:0 24px 60px rgba(0,0,0,.25); }
     .login-left{ flex:1; background:linear-gradient(160deg,#0f2c5c,#1d4ed8); color:#fff; padding:48px 40px; }
@@ -157,8 +195,9 @@ const PAGE_ROLES = {
   archive:  ['team_lead','engineer','supervisor'],
   audit:    ['team_lead','engineer','supervisor'],
   docs:     ['team_lead','engineer','supervisor'],
-  myorders: ['team_lead','engineer','supervisor'], // 我的工单：三类角色均可见（内容按角色隔离）
-  dashboard:['engineer','supervisor'],          // 工单池：工程师可承接/处理，主管全权
+  myorders: ['engineer','supervisor'],            // 工单池：Tab 标签同【我的工单】7 个，主管额外保留「待主管介入」
+  mine:     ['team_lead','engineer','supervisor'], // 我的工单：三类角色均可见，仅个人相关工单
+  dashboard:['supervisor'],                       // 主管数据看板：仅主管，纯统计视图
   eval:     ['supervisor'],                      // 评测集后台：仅主管
   guard:    ['supervisor']                       // 规则引擎/护栏：仅主管
 };
@@ -166,7 +205,8 @@ const PAGE_ROLES = {
 const MENU = [
   { key:'qa',       title:'智能问答',     icon:'ChatDotRound' },
   { key:'archive',  title:'会话存档',     icon:'Files' },
-  { key:'myorders', title:'我的工单',     icon:'List' },
+  { key:'myorders', title:'工单池',       icon:'List' },
+  { key:'mine',     title:'我的工单',     icon:'User' },
   { key:'docs',     title:'工艺文档库',   icon:'Collection' },
   { key:'audit',    title:'个人审计日志', icon:'Document' },
   { key:'dashboard',title:'主管数据看板', icon:'DataLine' },
@@ -193,7 +233,7 @@ let WO_SEQ = 1000;
 function nextWO(){ return 'WO-' + (++WO_SEQ); }
 function now(){ const d=new Date(); return d.toLocaleString('zh-CN',{hour12:false}); }
 function hhmm(){ const d=new Date(); return d.toLocaleTimeString('zh-CN',{hour12:false}); }
-function isNightNow(){ const h=new Date().getHours(); return h>=23 || h<8; }
+function isNightNow(){ const h=new Date().getHours(); return h>=20 || h<8; }
 
 // 工艺文档库（4 大类）
 const DOCUMENTS = [
@@ -428,10 +468,11 @@ const store = reactive({
   evalBlind: EVAL_BLIND,
   guards: GUARDS,
   globalSwitches: { filterExpired:true, compositeDetect:true, highRiskBlock:true },
-  dayNight: { dayStart:'08:00', dayEnd:'23:00', dayTimeout:30, nightPause:true, batchPush:'08:10', urgentPush:true },
+  dayNight: { dayStart:'08:00', dayEnd:'20:00', dayTimeout:30, nightPause:true, batchPush:'08:10', urgentPush:true },
   orders: [...SEED_ORDERS],
   nowTs: Date.now(),
   highlightOrder: '',   // 企微「去查看」跳转后高亮的目标工单 ID
+  poolTab: '',          // 看板指标卡 → 工单池的目标 Tab（一次性，进入后清空）
   pendingDocId: '',     // 溯源文档名点击后，文档库页需自动打开的原始文档 ID
   sidebarCollapsed: false,  // 侧边导航栏折叠状态（顶部汉堡按钮控制）
   isNarrow: typeof window!=='undefined' ? window.innerWidth<=1024 : false,  // 窄屏(≤1024)标记，用于自适应抽屉
@@ -450,7 +491,7 @@ function tsVal(s){
 }
 /* 受控表格时间排序：按表格 key 隔离状态，默认倒序；点击表头三角在 倒序/正序 两态间切换 */
 const TABLE_SORT = reactive({
-  archive:'desc', audit:'desc', docs:'desc', dash1:'desc', dash2:'desc', dash3:'desc', myorders:'desc'
+  archive:'desc', audit:'desc', docs:'desc', pool:'desc', mine:'desc'
 });
 function sortDir(key){ return TABLE_SORT[key] || 'desc'; }                 // 打开页面默认倒序
 function toggleTableSort(key){ TABLE_SORT[key] = sortDir(key)==='desc' ? 'asc' : 'desc'; }
@@ -546,6 +587,12 @@ function isMyOrder(o, user){
   if(user.role==='engineer')   return o.reporter===user.name || o.handler===user.name || o.status==='pending_engineer'; // 自己提交 + 派给自己承接
   if(user.role==='supervisor') return o.handler===user.name;                                       // 自己接管/转办的
   return false;
+}
+/* 我的工单：严格个人归属（自己提交 / 已认领承接），不含公共待分配工单 */
+function isMine(o, user){
+  if(!user) return false;
+  if(user.role==='team_lead') return o.reporterRole==='班组长';   // 班组长沿用原角色口径：本班组提报的工单
+  return o.reporter===user.name || o.handler===user.name;
 }
 function parseDeadline(s){
   if(!s || String(s).indexOf('—')>=0) return null;          // 夜间暂停
@@ -767,9 +814,9 @@ function isNoMatchQuery(text){
 /* ---- 智能问答主页 ---- */
 const QaPage = {
   template:`
-  <div>
+  <div class="wb-qa">
     <!-- 顶部演示按钮 + 风险三色条 -->
-    <div class="wb-card" style="padding:12px 16px;margin-bottom:14px;">
+    <div class="wb-card wb-qa-top">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div style="display:flex;align-items:center;gap:10px;">
           <span class="wb-section-title" style="margin:0;">智能问答 · 受控多轮对话</span>
@@ -783,16 +830,16 @@ const QaPage = {
       <div class="risk-bar" :style="{background:riskColor}"></div>
       <div style="display:flex;justify-content:space-between;margin-top:6px;">
         <span class="wb-mini">顶部风险提示：<b :style="{color:riskColor}">{{riskText}}</b></span>
-        <span class="wb-mini">当前时段：<b :style="{color: store.simNight||isNight() ? '#722ed1':'#1d4ed8'}">{{ store.simNight||isNight() ? '夜间(23:00-08:00)' : '日间(08:00-23:00)' }}</b>
+        <span class="wb-mini">当前时段：<b :style="{color: store.simNight||isNight() ? '#722ed1':'#1d4ed8'}">{{ store.simNight||isNight() ? '夜间(20:00-08:00)' : '日间(08:00-20:00)' }}</b>
           <el-switch v-model="store.simNight" size="small" style="margin-left:8px;" active-text="模拟夜间" /></span>
       </div>
     </div>
 
-    <div style="display:flex;gap:14px;align-items:flex-start;">
+    <div class="wb-qa-body">
       <!-- 主聊天区 -->
-      <div class="wb-card" style="flex:1;padding:14px;display:flex;flex-direction:column;">
+      <div class="wb-card wb-chat-card">
         <!-- 上下文状态栏 -->
-        <div style="background:#f7f9fc;border:1px solid var(--wb-line);border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+        <div class="wb-ctx-bar">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <span style="font-weight:700;font-size:13px;">上下文状态栏</span>
             <el-button size="small" text type="primary" :disabled="!hasCtx" @click="clearCtx">手动清空</el-button>
@@ -838,18 +885,18 @@ const QaPage = {
           </div>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:8px;">
+        <div class="wb-composer">
           <el-input v-model="input" placeholder="输入工艺问题（如：P55 Array 曝光能量为什么超标）" @keyup.enter="send" />
           <el-button type="primary" @click="send">发送</el-button>
         </div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
+        <div class="wb-composer-actions">
           <el-button size="small" @click="archiveSession">存档本次会话</el-button>
           <el-button size="small" type="warning" @click="openHelp">提交人工求助工单</el-button>
         </div>
       </div>
 
       <!-- 侧边演示案例库 -->
-      <div class="wb-card" style="width:300px;padding:14px;">
+      <div class="wb-card wb-case-card">
         <div class="wb-section-title">演示案例库（4 套预制脚本）
           <el-button size="small" :disabled="!streaming" @click="skipStream" style="margin-left:auto;">跳过流式输出</el-button>
         </div>
@@ -1323,12 +1370,12 @@ const GuardPage = {
     <div class="wb-section-title" style="font-size:14px;margin-top:18px;">日夜工单超时策略配置</div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
       <div class="wb-card" style="padding:14px;border-style:dashed;">
-        <div style="font-weight:700;margin-bottom:8px;">☀ 日间策略（08:00–23:00）</div>
+        <div style="font-weight:700;margin-bottom:8px;">☀ 日间策略（08:00–20:00）</div>
         <div class="wb-mini">日间接单超时：<el-input-number v-model="store.dayNight.dayTimeout" :min="5" :max="120" size="small" style="width:120px;"/> 分钟</div>
         <div class="wb-mini" style="margin-top:6px;">超时未接单 → 自动升级至主管介入池并推送主管企微。</div>
       </div>
       <div class="wb-card" style="padding:14px;border-style:dashed;">
-        <div style="font-weight:700;margin-bottom:8px;">🌙 夜间策略（23:00–次日08:00，含节假日）</div>
+        <div style="font-weight:700;margin-bottom:8px;">🌙 夜间策略（20:00–次日08:00，含节假日）</div>
         <div class="wb-mini">夜间暂停超时倒计时、不自动升级、不夜间打扰。</div>
         <div class="wb-mini" style="margin-top:6px;">次日批量推送时间：
           <el-time-picker v-model="batchTime" format="HH:mm" value-format="HH:mm" size="small" style="width:120px;"/>
@@ -1347,119 +1394,202 @@ const GuardPage = {
 };
 
 /* ---- 主管数据看板（内嵌工单池） ---- */
+/* ---- 主管数据看板（仅主管可见：统计指标卡 + 趋势图，无工单表格 / 无承接操作） ---- */
 const DashboardPage = {
   template:`
   <div class="wb-card" style="padding:16px;">
-    <div class="wb-section-title">主管数据看板 · 工单池 <span class="wb-demo-tag">{{store.user.role==='supervisor'?'主管全权':'工程师承接/处理'}}</span></div>
+    <div class="wb-section-title">主管数据看板 <span class="wb-demo-tag">仅统计视图 · 点击指标卡跳转工单池</span></div>
 
     <div class="wb-stats" style="margin-bottom:14px;">
-      <div class="wb-stat"><div class="n" style="color:var(--wb-blue)">{{tab1.length}}</div><div class="l">待工程师承接</div></div>
-      <div class="wb-stat"><div class="n" style="color:var(--wb-red)">{{tab2.length}}</div><div class="l">待主管介入</div></div>
-      <div class="wb-stat"><div class="n" style="color:var(--wb-green)">{{tab3.length}}</div><div class="l">历史归档</div></div>
-      <div class="wb-stat"><div class="n">{{store.orders.length}}</div><div class="l">工单总量</div></div>
+      <div class="wb-stat wb-stat-link" role="button" tabindex="0" :aria-label="'工单总量 '+metrics.total+' 条，点击进入工单池'" @click="goPool('all')" @keyup.enter="goPool('all')" @keyup.space.prevent="goPool('all')">
+        <div class="n" style="color:var(--wb-blue)">{{metrics.total}}</div><div class="l">工单总量</div>
+      </div>
+      <div class="wb-stat wb-stat-link" role="button" tabindex="0" :aria-label="'待工程师承接 '+metrics.pendingEngineer+' 条，点击进入工单池'" @click="goPool('1')" @keyup.enter="goPool('1')" @keyup.space.prevent="goPool('1')">
+        <div class="n" style="color:#1d5fe8">{{metrics.pendingEngineer}}</div><div class="l">待工程师承接</div>
+      </div>
+      <div class="wb-stat wb-stat-link" role="button" tabindex="0" :aria-label="'待主管介入 '+metrics.pendingSupervisor+' 条，点击进入工单池'" @click="goPool('2')" @keyup.enter="goPool('2')" @keyup.space.prevent="goPool('2')">
+        <div class="n" style="color:var(--wb-red)">{{metrics.pendingSupervisor}}</div><div class="l">待主管介入</div>
+      </div>
+      <div class="wb-stat wb-stat-link" role="button" tabindex="0" :aria-label="'超时工单 '+metrics.overdue+' 条，点击进入工单池'" @click="goPool('overdue')" @keyup.enter="goPool('overdue')" @keyup.space.prevent="goPool('overdue')">
+        <div class="n" style="color:var(--wb-yellow)">{{metrics.overdue}}</div><div class="l">超时工单</div>
+      </div>
+      <div class="wb-stat wb-stat-link" role="button" tabindex="0" :aria-label="'紧急工单 '+metrics.urgent+' 条，点击进入工单池'" @click="goPool('urgent')" @keyup.enter="goPool('urgent')" @keyup.space.prevent="goPool('urgent')">
+        <div class="n" style="color:var(--wb-red)">{{metrics.urgent}}</div><div class="l">紧急工单</div>
+      </div>
     </div>
 
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <div class="wb-chart">
+      <div class="wb-chart-head">
+        <div style="font-weight:700;font-size:14px;">工单提报趋势</div>
+        <div class="wb-mini">按提报日期汇总 · 最近 {{trend.length}} 个有工单的日期（演示数据）</div>
+      </div>
+      <div class="wb-chart-bars">
+        <div class="wb-chart-col" v-for="t in trend" :key="t.date" :title="t.date+'：'+t.n+' 单'">
+          <div class="wb-chart-val">{{t.n}}</div>
+          <div class="wb-chart-bar" :style="{height:barH(t.n)}"></div>
+        </div>
+      </div>
+      <div class="wb-chart-axis">
+        <span class="wb-chart-x" v-for="t in trend" :key="t.date">{{t.date}}</span>
+      </div>
+      <div class="wb-tip" style="margin-top:12px;">统计口径：工单总量 = 全部状态；超时工单 = 未闭环且倒计时归零；紧急工单 = 含紧急标签或优先级为紧急。看板仅做统计呈现，工单承接请在【工单池】完成。</div>
+    </div>
+  </div>`,
+  setup(){
+    const metrics = computed(()=>({
+      total: store.orders.length,
+      pendingEngineer: store.orders.filter(o=>o.status==='pending_engineer').length,
+      pendingSupervisor: store.orders.filter(o=>o.status==='pending_supervisor').length,
+      overdue: store.orders.filter(o=>o.status!=='closed' && orderCountdown(o,store.nowTs).cls==='timeout').length,
+      urgent: store.orders.filter(o=>o.tags.some(t=>t.indexOf('紧急')>=0)||o.priority==='紧急').length
+    }));
+    const trend = computed(()=>{
+      const map={};
+      store.orders.forEach(o=>{
+        const m=String(o.created||'').match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+        if(!m) return;
+        const k=m[1]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[3]).padStart(2,'0');
+        map[k]=(map[k]||0)+1;
+      });
+      return Object.keys(map).sort().slice(-7).map(k=>({date:k.slice(5),n:map[k]}));
+    });
+    const maxN = computed(()=> Math.max(1, ...trend.value.map(t=>t.n)));
+    function barH(n){ return Math.max(4, Math.round(n/maxN.value*80))+'%'; }
+    function goPool(tab){
+      store.poolTab = tab;
+      if(store.currentPage!=='myorders'){ store.history.push(store.currentPage); store.currentPage='myorders'; }
+      const names={ all:'全部', '1':'待处理', '2':'待主管介入', overdue:'已超时', urgent:'紧急工单' };
+      EP.ElMessage.info('已跳转【工单池】· '+(names[tab]||''));
+    }
+    return { store, metrics, trend, barH, goPool };
+  }
+};
+
+/* ---- 工单池页（Tab 标签与【我的工单】逐字一致：工程师 7 个；主管 7 个 +「待主管介入」且默认该项；表格分页） ---- */
+const PoolPage = {
+  template:`
+  <div class="wb-card" style="padding:16px;">
+    <div class="wb-section-title">工单池 <span class="wb-demo-tag">{{isSup?'同我的工单 7 个标签 + 待主管介入 · 默认待主管介入':'同我的工单 7 个标签'}}</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+      <el-radio-group v-model="filter" style="flex-shrink:0;">
+        <el-radio-button v-for="t in tabs" :key="t.name" :label="t.name">{{t.label}}</el-radio-button>
+      </el-radio-group>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+        <el-button size="small" type="warning" plain @click="newHelp">+ 提报求助工单</el-button>
+        <el-select v-model="priFilter" clearable placeholder="优先级" style="width:116px;">
+          <el-option label="紧急" value="紧急"/><el-option label="高" value="高"/><el-option label="中" value="中"/><el-option label="低" value="低"/>
+        </el-select>
+        <el-select v-model="tagFilter" clearable placeholder="标签" style="width:116px;">
+          <el-option label="良率异常" value="良率异常"/><el-option label="复检" value="复检"/><el-option label="夜间上报" value="夜间上报"/>
+          <el-option label="紧急停线" value="紧急停线"/><el-option label="复合疑难" value="复合疑难"/>
+        </el-select>
+        <el-button @click="resetFilters">重置</el-button>
+      </div>
+    </div>
+
+    <el-table :data="paged" border style="width:100%" :row-class-name="rowCls">
+      <el-table-column prop="id" label="工单ID" width="96" />
+      <el-table-column prop="created" width="104">
+        <template #header><time-sort-header label="提交时间" sort-key="pool"/></template>
+        <template #default="{row}">
+          <div style="line-height:1.35;">{{(row.created||'').split(' ')[0]}}</div>
+          <div class="wb-mini">{{(row.created||'').split(' ')[1]||''}}</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="问题摘要" min-width="170"><template #default="{row}">{{maskSummary(row)}}</template></el-table-column>
+      <el-table-column prop="priority" label="优先级" width="68" />
+      <el-table-column label="当前处理角色" width="94"><template #default="{row}">{{row.handler||'待分配'}}</template></el-table-column>
+      <el-table-column label="工单状态" width="98"><template #default="{row}"><el-tag size="small" :type="statusType(row.status)">{{statusText(row.status)}}</el-tag></template></el-table-column>
+      <el-table-column label="超时倒计时" width="170">
+        <template #default="{row}">
+          <el-tag size="small" :type="td(row).tagType" :class="{'wb-blink':td(row).blink}">{{td(row).tagText}}</el-tag>
+          <div class="wb-mini" v-if="td(row).aux" style="margin-top:2px;">{{td(row).aux}}</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="标签" width="132"><template #default="{row}"><el-tag v-for="t in row.tags" :key="t" size="small" :type="tagType(t)" style="margin-right:4px;margin-bottom:2px;">{{t}}</el-tag></template></el-table-column>
+      <el-table-column label="操作" width="152">
+        <template #default="{row}">
+          <el-button size="small" type="primary" plain @click="take(row)" :disabled="!canTake(row)">{{takeLabel(row)}}</el-button>
+          <el-button size="small" @click="openDetail(row)">详情</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div v-if="filtered.length" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <el-pagination
+        :current-page="page" :page-size="pageSize" :page-sizes="[8, 15, 30]"
+        :pager-count="5" :total="filtered.length"
+        layout="total, sizes, prev, pager, next" background small
+        @current-change="onPageChange" @size-change="onSizeChange" />
+    </div>
+    <el-empty v-if="!filtered.length" description="当前筛选条件下暂无工单" />
+
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
       <el-button size="small" @click="demoTimeout">演示：触发30分钟超时升级</el-button>
       <el-button size="small" @click="demoBatch">演示：次日{{store.dayNight.batchPush}}批量推送</el-button>
-      <el-button size="small" type="warning" plain @click="newHelp">+ 提报求助工单</el-button>
     </div>
 
-    <el-tabs v-model="active">
-      <el-tab-pane label="待工程师承接" name="1">
-        <el-table :data="$sorted(tab1, 'dash1', 'created')" border>
-          <el-table-column prop="id" label="工单ID" width="110"/>
-          <el-table-column prop="summary" label="问题摘要" min-width="200"/>
-          <el-table-column prop="reporter" label="提报人" width="100"/>
-          <el-table-column prop="created" width="160">
-            <template #header><time-sort-header label="提报时间" sort-key="dash1"/></template>
-          </el-table-column>
-          <el-table-column prop="priority" label="优先级" width="80"/>
-          <el-table-column prop="risk" label="风险" width="70"><template #default="{row}"><span :class="riskCls(row.risk)">{{row.risk}}</span></template></el-table-column>
-          <el-table-column label="标签" width="140"><template #default="{row}"><el-tag v-for="t in row.tags" :key="t" size="small" style="margin-right:4px;">{{t}}</el-tag></template></el-table-column>
-          <el-table-column label="操作" width="160">
-            <template #default="{row}">
-              <el-button size="small" type="primary" @click="accept(row)" :disabled="!canHandle">承接</el-button>
-              <el-button size="small" @click="openDetail(row)">详情</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-        <el-empty v-if="!tab1.length" description="暂无待承接工单" />
-      </el-tab-pane>
-
-      <el-tab-pane label="待主管介入" name="2">
-        <el-table :data="$sorted(tab2, 'dash2', 'created')" border>
-          <el-table-column prop="id" label="工单ID" width="110"/>
-          <el-table-column prop="summary" label="问题摘要" min-width="200"/>
-          <el-table-column prop="reporter" label="提报人" width="100"/>
-          <el-table-column prop="created" width="160">
-            <template #header><time-sort-header label="提报时间" sort-key="dash2"/></template>
-          </el-table-column>
-          <el-table-column prop="priority" label="优先级" width="80"/>
-          <el-table-column prop="risk" label="风险" width="70"><template #default="{row}"><span :class="riskCls(row.risk)">{{row.risk}}</span></template></el-table-column>
-          <el-table-column label="标签" width="160"><template #default="{row}"><el-tag v-for="t in row.tags" :key="t" size="small" type="warning" style="margin-right:4px;">{{t}}</el-tag></template></el-table-column>
-          <el-table-column label="操作" width="260">
-            <template #default="{row}">
-              <el-button size="small" type="success" @click="grab(row)" :disabled="!isSup">抢单</el-button>
-              <el-button size="small" @click="transfer(row)" :disabled="!isSup">转办指派</el-button>
-              <el-button size="small" @click="openDetail(row)">详情</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-        <el-empty v-if="!tab2.length" description="暂无待主管介入工单" />
-      </el-tab-pane>
-
-      <el-tab-pane label="历史归档工单" name="3">
-        <el-table :data="$sorted(tab3, 'dash3', 'closed')" border>
-          <el-table-column prop="id" label="工单ID" width="110"/>
-          <el-table-column prop="summary" label="问题摘要" min-width="200"/>
-          <el-table-column prop="handler" label="处理人" width="100"/>
-          <el-table-column prop="closed" width="170">
-            <template #header><time-sort-header label="闭环时间" sort-key="dash3"/></template>
-          </el-table-column>
-          <el-table-column label="操作" width="90"><template #default="{row}"><el-button size="small" @click="openDetail(row)">详情</el-button></template></el-table-column>
-        </el-table>
-        <el-empty v-if="!tab3.length" description="暂无归档工单" />
-      </el-tab-pane>
-    </el-tabs>
-
-    <!-- 工单详情 / 处理弹窗 -->
-    <el-dialog v-model="dv" :title="cur?.id+' 工单详情'" width="640px">
+    <el-dialog v-model="dv" :title="(cur?cur.id:'')+' 工单详情'" width="680px">
       <template v-if="cur">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="来源">{{cur.source}}</el-descriptions-item>
           <el-descriptions-item label="提报人">{{cur.reporter}}（{{cur.reporterRole}}）</el-descriptions-item>
-          <el-descriptions-item label="关联会话">{{cur.session||'—'}}</el-descriptions-item>
-          <el-descriptions-item label="优先级">
-            <el-select v-if="isSup" v-model="cur.priority" size="small" style="width:110px;"><el-option label="紧急" value="紧急"/><el-option label="高" value="高"/><el-option label="中" value="中"/><el-option label="低" value="低"/></el-select>
-            <span v-else>{{cur.priority}}</span>
-          </el-descriptions-item>
+          <el-descriptions-item label="优先级">{{cur.priority}}</el-descriptions-item>
           <el-descriptions-item label="风险"><span :class="riskCls(cur.risk)">{{cur.risk}}</span></el-descriptions-item>
-          <el-descriptions-item label="状态">{{cur.status}}</el-descriptions-item>
-          <el-descriptions-item label="处理人">{{cur.handler||'—'}}</el-descriptions-item>
-          <el-descriptions-item label="超时截止">{{cur.deadline}}</el-descriptions-item>
+          <el-descriptions-item label="工单状态">{{statusText(cur.status)}}</el-descriptions-item>
+          <el-descriptions-item label="当前处理角色">{{cur.handler||'待分配'}}</el-descriptions-item>
+          <el-descriptions-item label="工单创建时间">{{cur.created}}</el-descriptions-item>
+          <el-descriptions-item label="计划超时截止时间">{{planDeadline(cur)}}</el-descriptions-item>
+          <el-descriptions-item label="超时倒计时" :span="2">
+            <el-tag size="small" :type="td(cur).tagType" :class="{'wb-blink':td(cur).blink}">{{td(cur).tagText}}</el-tag>
+            <span class="wb-mini" v-if="td(cur).aux" style="margin-left:6px;">{{td(cur).aux}}</span>
+          </el-descriptions-item>
         </el-descriptions>
-        <div style="font-weight:700;margin:12px 0 4px;">问题摘要</div>
-        <div class="wb-mini">{{cur.summary}}</div>
+
+        <div style="font-weight:700;margin:12px 0 4px;display:flex;align-items:center;gap:10px;">
+          <span>问题摘要</span>
+          <el-button v-if="cur.session && convFor(cur.session)" size="small" type="primary" plain @click="openConv(cur.session)">查看原对话</el-button>
+          <span v-else-if="cur.session" class="wb-mini">（该会话无存档对话）</span>
+          <span v-else class="wb-mini">（现场提报工单，无关联会话）</span>
+        </div>
+        <div class="wb-mini">{{maskSummary(cur)}}</div>
+
+        <div class="wb-tip" style="margin:10px 0 0;">超时流转规则：日间工单 30 分钟未接单自动升级至主管介入池；夜间普通工单暂停计时，次日 08:10 恢复；紧急工单穿透即时推送，30 分钟超时正常执行。</div>
 
         <div style="font-weight:700;margin:12px 0 4px;">流转时间线</div>
         <el-timeline style="padding-left:6px;">
           <el-timeline-item v-for="(t,i) in cur.timeline" :key="i" :timestamp="t.t" placement="top">{{t.e}}</el-timeline-item>
         </el-timeline>
 
-        <div v-if="canHandle && cur.status!=='closed'" style="margin-top:8px;border-top:1px dashed var(--wb-line);padding-top:10px;">
-          <el-input v-model="conclusion" type="textarea" :rows="2" placeholder="填写处置结论（工程师/主管）" />
-          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-            <el-button size="small" type="success" @click="closeOrder(cur)">填写结论并闭环</el-button>
-            <el-button size="small" type="warning" @click="escalate(cur)" :disabled="!canHandle">升级主管</el-button>
-            <el-button size="small" v-if="isSup" type="primary" @click="transfer(cur)">转办指派</el-button>
-          </div>
+        <div style="font-weight:700;margin:12px 0 4px;">留言记录</div>
+        <div v-if="!cur.comments.length" class="wb-mini">暂无留言</div>
+        <div v-for="(c,i) in cur.comments" :key="i" style="background:#f7f9fc;border:1px solid var(--wb-line);border-radius:6px;padding:8px 10px;margin-bottom:6px;">
+          <div class="wb-mini">{{c.who}} · {{c.time}}</div>
+          <div style="font-size:13px;margin-top:2px;">{{c.text}}</div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;" v-if="canAct">
+          <el-button size="small" type="primary" @click="accept(cur)" :disabled="cur.status!=='pending_engineer'">接单</el-button>
+          <el-button size="small" type="success" @click="closeOrder(cur)">填写结论并闭环</el-button>
+          <el-button size="small" type="warning" @click="escalate(cur)">升级主管</el-button>
+          <el-button size="small" v-if="isSup" type="primary" plain @click="transfer(cur)">转办指派</el-button>
+        </div>
+        <div v-else class="wb-tip" style="margin-top:8px;">当前角色仅可追加留言，无法接单 / 闭环 / 转派（工单内容已脱敏）。</div>
+        <div style="margin-top:10px;">
+          <el-input v-model="commentText" type="textarea" :rows="2" placeholder="追加留言说明（所有角色均可）" />
+          <el-button size="small" style="margin-top:6px;" @click="addComment">追加留言</el-button>
         </div>
       </template>
       <template #footer><el-button @click="dv=false">关闭</el-button></template>
     </el-dialog>
 
-    <!-- 转办指派弹窗 -->
+    <el-dialog v-model="convOpen" :title="'原对话记录 · '+(convSession||'')" width="640px">
+      <div v-if="convMsgs" style="max-height:440px;overflow:auto;padding:4px;">
+        <div v-for="(m,i) in convMsgs" :key="i" class="wb-bubble" :class="m.r" style="max-width:88%;margin-bottom:10px;">{{m.t}}</div>
+      </div>
+      <div v-else class="wb-mini">该会话暂无存档对话内容。</div>
+      <template #footer><el-button @click="convOpen=false">关闭</el-button></template>
+    </el-dialog>
+
     <el-dialog v-model="tv" title="转办指派给工程师" width="420px">
       <el-select v-model="transferTo" placeholder="选择在岗工程师" style="width:100%;">
         <el-option label="李工程师（Array）" value="李工程师"/>
@@ -1470,29 +1600,97 @@ const DashboardPage = {
     </el-dialog>
   </div>`,
   setup(){
-    const active=ref('1'); const dv=ref(false); const cur=ref(null);
-    const tv=ref(false); const transferTo=ref(''); const conclusion=ref('');
+    const filter=ref(store.user && store.user.role==='supervisor' ? '2' : '1');  // 主管默认「待主管介入」，工程师默认「待处理」
+    const priFilter=ref(''); const tagFilter=ref('');   // Tab 行右侧叠加筛选（默认空=全部）
+    const page=ref(1); const pageSize=ref(8);           // 工单池分页：默认每页 8 条，避免长列表一直下滑
+    const dv=ref(false); const cur=ref(null);
+    const tv=ref(false); const transferTo=ref(''); const commentText=ref('');
+    const convOpen=ref(false); const convSession=ref(''); const convMsgs=ref(null);
+    const hlId=ref('');
     const isSup = computed(()=> store.user.role==='supervisor');
-    const canHandle = computed(()=> ability(store.user.role).canHandleOrder);
-    const tab1 = computed(()=> store.orders.filter(o=>o.status==='pending_engineer'));
-    const tab2 = computed(()=> store.orders.filter(o=>o.status==='pending_supervisor'));
-    const tab3 = computed(()=> store.orders.filter(o=>o.status==='closed'));
-
+    const isLead = computed(()=> store.user.role==='team_lead');
+    const canAct = computed(()=> !isLead.value);   // 班组长不可接单/闭环/转派
+    // 工单池 Tab：标签与【我的工单】逐字一致（7 个）；主管在「待处理」后额外保留「待主管介入」
+    // 内部 name 沿用看板指标卡 / 「去查看」的跳转映射，改名不影响跨页联动
+    const commonTabs = [
+      {name:'all',label:'全部'},
+      {name:'1',label:'待处理'},
+      {name:'processing',label:'处理中'},
+      {name:'3',label:'已闭环'},
+      {name:'overdue',label:'已超时'},
+      {name:'night',label:'夜间工单'},
+      {name:'urgent',label:'紧急工单'}
+    ];
+    const tabs = computed(()=> isSup.value
+      ? [...commonTabs.slice(0,2), {name:'2',label:'待主管介入'}, ...commonTabs.slice(2)]
+      : commonTabs.slice());
+    // 看板指标卡 / 「去查看」跳转：poolTab 为一次性目标，进入后立即清空；目标 Tab 对当前角色不可见时回落到默认 Tab
+    watch(()=>store.poolTab, (v)=>{ if(v){ filter.value = tabs.value.some(t=>t.name===v) ? v : (isSup.value ? '2' : '1'); store.poolTab=''; } }, {immediate:true});
+    // 防越权：工程师不可落入「待主管介入」Tab
+    watch(filter, (v)=>{ if(!tabs.value.some(t=>t.name===v)) filter.value = isSup.value ? '2' : '1'; });
+    // 切换 Tab / 下拉筛选后回到第 1 页
+    watch([filter, priFilter, tagFilter], ()=>{ page.value = 1; });
+    const filtered = computed(()=>{
+      if(!store.user) return [];
+      let list;
+      switch(filter.value){
+        case '1': list=store.orders.filter(o=>o.status==='pending_engineer'); break;
+        case '2': list=store.orders.filter(o=>o.status==='pending_supervisor'); break;
+        case '3': list=store.orders.filter(o=>o.status==='closed'); break;
+        case 'processing': list=store.orders.filter(o=>o.status==='processing'); break;
+        case 'night': list=store.orders.filter(o=>o.tags.some(t=>t.indexOf('夜间')>=0)); break;
+        case 'overdue': list=store.orders.filter(o=>o.status!=='closed' && orderCountdown(o,store.nowTs).cls==='timeout'); break;
+        case 'urgent': list=store.orders.filter(o=>o.tags.some(t=>t.indexOf('紧急')>=0)||o.priority==='紧急'); break;
+        default: list=store.orders.slice();
+      }
+      // Tab 行右侧下拉：在当前 Tab 视图内二次叠加过滤（切换 Tab 时下拉值保留）
+      if(priFilter.value) list=list.filter(o=>o.priority===priFilter.value);
+      if(tagFilter.value) list=list.filter(o=>o.tags.some(t=>t.indexOf(tagFilter.value)>=0));
+      return sorted(list, 'pool', 'created');   // 默认提交时间倒序，点击表头三角切正序
+    });
+    const paged = computed(()=> filtered.value.slice((page.value-1)*pageSize.value, page.value*pageSize.value));
+    const totalPages = computed(()=> Math.max(1, Math.ceil(filtered.value.length/pageSize.value)));
+    function onPageChange(v){ page.value = v; }
+    function onSizeChange(sz){ pageSize.value = sz; page.value = 1; }
+    // 列表变短（承接 / 闭环 / 筛选）时把页码收回有效范围
+    watch(totalPages, (p)=>{ if(page.value>p) page.value=p; });
+    watch(()=>store.highlightOrder, (v)=>{
+      if(!v) return;
+      priFilter.value=''; tagFilter.value=''; hlId.value=v;
+      nextTick(()=>{ const idx=filtered.value.findIndex(o=>o.id===v); page.value = idx>=0 ? Math.floor(idx/pageSize.value)+1 : 1; });  // 去查看：跳到目标工单所在分页
+      setTimeout(()=>{ hlId.value=''; store.highlightOrder=''; }, 6000);
+    }, {immediate:true});  // 去查看：清空下拉并高亮目标工单（Tab 由 poolTab 指定）
+    function resetFilters(){ priFilter.value=''; tagFilter.value=''; }   // 重置：只清两个下拉，不改变当前 Tab
     function riskCls(r){ return r==='高'?'tag-high':r==='中'?'tag-mid':'tag-low'; }
-    function openDetail(o){ cur.value=o; conclusion.value=''; dv.value=true; }
-    function accept(o){ o.status='processing'; o.handler=store.user.name; o.deadline=deadlineIn(store.dayNight.dayTimeout); o.timeline.push({t:now(),e:store.user.name+' 承接工单，进入处理中'}); EP.ElMessage.success('已承接 '+o.id); }
-    function grab(o){ o.status='processing'; o.handler=store.user.name; o.deadline=deadlineIn(store.dayNight.dayTimeout); o.timeline.push({t:now(),e:'主管 '+store.user.name+' 抢单'}); EP.ElMessage.success('已抢单 '+o.id); }
-    function closeOrder(o){ o.status='closed'; o.closed=now(); o.timeline.push({t:now(),e:store.user.name+' 填写结论并闭环：'+(conclusion.value||'（无补充说明）')}); dv.value=false; EP.ElMessage.success('工单已闭环 '+o.id); }
+    function statusText(s){ return ({pending_engineer:'待工程师承接',pending_supervisor:'待主管介入',processing:'处理中',closed:'已闭环'})[s]||s; }
+    function statusType(s){ return s==='closed'?'success':(s==='processing'?'':'warning'); }
+    function tagType(t){ if(t.indexOf('紧急')>=0) return 'danger'; if(t.indexOf('夜间')>=0) return 'info'; if(t.indexOf('复合')>=0||t.indexOf('超时')>=0) return 'warning'; return ''; }
+    function td(o){ return timeoutDisplay(o, store.nowTs); }
+    function planDeadline(o){ if(o.tags.indexOf('夜间上报')>=0 && o.status!=='closed') return '次日 08:10 恢复计时'; return fmtTs(o.deadlineTs!=null?o.deadlineTs:parseDeadline(o.deadline)); }
+    function convFor(id){ return getSessionMessages(id)!=null; }
+    function openConv(id){ convSession.value=id; convMsgs.value=getSessionMessages(id); convOpen.value=true; }
+    function rowCls({row}){ return row.id===hlId.value ? 'wb-row-hl' : ''; }
+    function maskSummary(o){ if(isLead.value){ return (o.summary||'').replace(/(\d+(\.\d+)?\s*(mJ|℃|μm|ft³))/g,'（高风险参数已隐藏）'); } return o.summary; }
+    function openDetail(o){ cur.value=o; commentText.value=''; dv.value=true; }
+    function accept(o){ o.status='processing'; o.handler=store.user.name; o.deadline=deadlineIn(store.dayNight.dayTimeout); o.deadlineTs=Date.now()+store.dayNight.dayTimeout*60000; o.timeline.push({t:now(),e:store.user.name+' 接单，进入处理中'}); EP.ElMessage.success('已接单 '+o.id); }
+    function closeOrder(o){ o.status='closed'; o.closed=now(); o.timeline.push({t:now(),e:store.user.name+' 填写结论并闭环'}); dv.value=false; EP.ElMessage.success('工单已闭环 '+o.id); }
     function escalate(o){ o.status='pending_supervisor'; o.timeline.push({t:now(),e:store.user.name+' 升级至主管介入池'}); wecomPush(['主管群'],'工单升级 '+o.id,o.summary+' 已升级，请主管介入。', o.id); EP.ElMessage.warning('已升级 '+o.id); }
     function transfer(o){ tv.value=true; cur.value=o; }
-    function doTransfer(){ if(!transferTo.value){EP.ElMessage.warning('请选择工程师');return;} cur.value.status='processing'; cur.value.handler=transferTo.value; cur.value.tags=cur.value.tags.filter(t=>t!=='升级'); cur.value.deadline=deadlineIn(store.dayNight.dayTimeout); cur.value.timeline.push({t:now(),e:'主管转办指派给 '+transferTo.value+'，重置30分钟倒计时'}); tv.value=false; EP.ElMessage.success('已转办给 '+transferTo.value); }
-
+    function doTransfer(){ if(!transferTo.value){EP.ElMessage.warning('请选择工程师');return;} cur.value.status='processing'; cur.value.handler=transferTo.value; cur.value.tags=cur.value.tags.filter(t=>t!=='升级'); cur.value.deadline=deadlineIn(store.dayNight.dayTimeout); cur.value.deadlineTs=Date.now()+store.dayNight.dayTimeout*60000; cur.value.timeline.push({t:now(),e:'主管转办指派给 '+transferTo.value+'，重置30分钟倒计时'}); tv.value=false; EP.ElMessage.success('已转办给 '+transferTo.value); }
+    function canTake(o){ return canAct.value && (o.status==='pending_engineer' || (isSup.value && o.status==='pending_supervisor')); }
+    function takeLabel(o){ return o.status==='pending_supervisor' ? '抢单' : '接单'; }
+    function take(o){
+      const wasSup = o.status==='pending_supervisor';
+      o.status='processing'; o.handler=store.user.name;
+      o.deadline=deadlineIn(store.dayNight.dayTimeout); o.deadlineTs=Date.now()+store.dayNight.dayTimeout*60000;
+      o.timeline.push({t:now(), e:(wasSup?'主管 ':'')+store.user.name+' 承接工单，进入处理中'});
+      EP.ElMessage.success('已承接 '+o.id+'，已自动进入【我的工单】');
+    }
     function demoTimeout(){
-      const o = tab1.value[0];
+      const o = store.orders.find(x=>x.status==='pending_engineer');
       if(!o){ EP.ElMessage.info('当前无待承接工单可演示超时'); return; }
-      const night = store.simNight||isNightNow();
-      if(night){ EP.ElMessage.info('夜间：'+o.id+' 暂停超时，不自动升级、不夜间打扰'); }
-      else { o.status='pending_supervisor'; o.tags.push('超时升级'); o.timeline.push({t:now(),e:'30分钟未接单，自动升级至主管介入池'}); wecomPush(['主管群'],'超时升级 '+o.id,o.summary+' 超时未接单，已推送主管。', o.id); EP.ElMessage.warning('已自动升级 '+o.id); }
+      if(store.simNight||isNightNow()){ EP.ElMessage.info('夜间：'+o.id+' 暂停超时，不自动升级、不夜间打扰'); }
+      else { o.status='pending_supervisor'; o.tags.push('超时升级'); o.timeline.push({t:now(),e:'30分钟未接单，自动升级至主管介入池'}); wecomPush(['主管群'],'超时升级 '+o.id,o.summary+' 超时未接单，已推送主管。',o.id); EP.ElMessage.warning('已自动升级 '+o.id); }
     }
     function demoBatch(){
       const nightOrders = store.orders.filter(o=>o.tags.includes('夜间上报') && o.status==='pending_engineer');
@@ -1502,16 +1700,16 @@ const DashboardPage = {
       EP.ElMessage.success('已批量推送 '+nightOrders.length+' 条夜间工单');
     }
     function newHelp(){ store.currentPage='qa'; EP.ElMessage.info('请前往「智能问答」页提交人工求助工单'); }
-
-    return { store, active, dv, cur, tv, transferTo, conclusion, isSup, canHandle, tab1, tab2, tab3, riskCls, openDetail, accept, grab, closeOrder, escalate, transfer, doTransfer, demoTimeout, demoBatch, newHelp };
+    function addComment(){ if(!commentText.value){EP.ElMessage.warning('请输入留言');return;} cur.value.comments.push({time:now(), who:store.user.name+'('+ROLES[store.user.role].short+')', text:commentText.value}); commentText.value=''; EP.ElMessage.success('留言已追加'); }
+    return { store, filter, tabs, page, pageSize, paged, onPageChange, onSizeChange, take, canTake, takeLabel, demoTimeout, demoBatch, newHelp, priFilter, tagFilter, resetFilters, dv, cur, tv, transferTo, commentText, convOpen, convSession, convMsgs, hlId, isSup, isLead, canAct, filtered, riskCls, statusText, statusType, tagType, td, planDeadline, convFor, openConv, rowCls, maskSummary, openDetail, accept, closeOrder, escalate, transfer, doTransfer, addComment };
   }
 };
 
-/* ---- 我的工单页（共用主管看板工单池，按角色隔离） ---- */
-const MyOrdersPage = {
+/* ---- 我的工单页（独立页面：仅自己提交 / 已认领承接的工单，无公共待分配） ---- */
+const MinePage = {
   template:`
   <div class="wb-card" style="padding:16px;">
-    <div class="wb-section-title">我的工单 <span class="wb-demo-tag">与主管看板共用同一工单池</span></div>
+    <div class="wb-section-title">我的工单 <span class="wb-demo-tag">仅自己提交 / 已承接 · 无公共待分配工单</span></div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:nowrap;">
       <el-radio-group v-model="filter" style="flex-shrink:0;">
         <el-radio-button label="全部">全部</el-radio-button>
@@ -1537,7 +1735,7 @@ const MyOrdersPage = {
     <el-table :data="filtered" border style="width:100%" :row-class-name="rowCls">
       <el-table-column prop="id" label="工单ID" width="96" />
       <el-table-column prop="created" width="104">
-        <template #header><time-sort-header label="提交时间" sort-key="myorders"/></template>
+        <template #header><time-sort-header label="提交时间" sort-key="mine"/></template>
         <template #default="{row}">
           <div style="line-height:1.35;">{{(row.created||'').split(' ')[0]}}</div>
           <div class="wb-mini">{{(row.created||'').split(' ')[1]||''}}</div>
@@ -1641,21 +1839,20 @@ const MyOrdersPage = {
     const canAct = computed(()=> !isLead.value);   // 班组长不可接单/闭环/转派
     const filtered = computed(()=>{
       if(!store.user) return [];
-      let list = store.orders.filter(o=> isMyOrder(o, store.user));
+      let list = store.orders.filter(o=> isMine(o, store.user));
       switch(filter.value){
         case '待处理': list=list.filter(o=>o.status==='pending_engineer'||o.status==='pending_supervisor'); break;
         case '处理中': list=list.filter(o=>o.status==='processing'); break;
         case '已闭环': list=list.filter(o=>o.status==='closed'); break;
         case '已超时': list=list.filter(o=>o.status!=='closed' && orderCountdown(o,store.nowTs).cls==='timeout'); break;
         case '夜间工单': list=list.filter(o=>o.tags.some(t=>t.indexOf('夜间')>=0)); break;
-        // 紧急工单走穿透机制（工程师群+主管群双向并行）：本 Tab 用全池，保证各角色都能同时看到
-        // 【紧急停线】与【复合疑难】两类；其余 Tab 仍按 isMyOrder 严格隔离，铃铛红点算法不变
-        case '紧急工单': list=store.orders.filter(o=>o.tags.some(t=>t.indexOf('紧急')>=0)||o.priority==='紧急'); break;
+        // 紧急工单：仅在个人归属范围内过滤，不引入公共待分配工单
+        case '紧急工单': list=list.filter(o=>o.tags.some(t=>t.indexOf('紧急')>=0)||o.priority==='紧急'); break;
       }
       // Tab 行右侧下拉：在当前 Tab 视图内二次叠加过滤（切换 Tab 时下拉值保留）
       if(priFilter.value) list=list.filter(o=>o.priority===priFilter.value);
       if(tagFilter.value) list=list.filter(o=>o.tags.some(t=>t.indexOf(tagFilter.value)>=0));
-      return sorted(list, 'myorders', 'created');   // 默认提交时间倒序，点击表头三角切正序
+      return sorted(list, 'mine', 'created');   // 默认提交时间倒序，点击表头三角切正序
     });
     watch(()=>store.highlightOrder, (v)=>{ if(v){ filter.value='全部'; priFilter.value=''; tagFilter.value=''; hlId.value=v; setTimeout(()=>{ hlId.value=''; store.highlightOrder=''; }, 6000); } });  // 去查看：回全部视图并清空下拉，确保目标工单可见
     function resetFilters(){ priFilter.value=''; tagFilter.value=''; }   // 重置：只清两个下拉，不改变当前 Tab
@@ -1715,7 +1912,7 @@ const App = {
         <div class="wb-head-right">
           <span class="wb-mini wb-hide-narrow">🕐 {{clock}}</span>
           <el-badge :value="alertCount" :hidden="alertCount===0" :max="99">
-            <el-button size="small" circle @click="go('myorders')" title="待处理 / 即将超时工单提醒">
+            <el-button size="small" circle @click="goAlert" title="待处理 / 即将超时工单提醒（点击进入工单池或我的工单）">
               <el-icon><component :is="'Bell'"/></el-icon>
             </el-button>
           </el-badge>
@@ -1730,6 +1927,7 @@ const App = {
         <audit-page v-else-if="store.currentPage==='audit'"/>
         <doc-page v-else-if="store.currentPage==='docs'"/>
         <my-orders-page v-else-if="store.currentPage==='myorders'"/>
+        <my-work-page v-else-if="store.currentPage==='mine'"/>
         <dashboard-page v-else-if="store.currentPage==='dashboard'"/>
         <eval-page v-else-if="store.currentPage==='eval'"/>
         <guard-page v-else-if="store.currentPage==='guard'"/>
@@ -1774,7 +1972,14 @@ const App = {
     function back(){ if(store.history.length){ store.currentPage = store.history.pop(); } }   // 返回：仅路由回退，不撤销已提交数据
     function toggleSide(){ store.sidebarCollapsed = !store.sidebarCollapsed; }  // 顶部汉堡：折叠/展开侧栏
     function relogin(){ logout('已切换角色 / 登出'); }
-    function goView(){ const id=store.wecom.orderId; store.wecom.visible=false; store.highlightOrder=id; go('myorders'); }
+    function goView(){
+      const id=store.wecom.orderId; store.wecom.visible=false; store.highlightOrder=id;
+      const o = store.orders.find(x=>x.id===id);
+      if(o && isMine(o, store.user)){ go('mine'); return; }
+      if(canView('myorders')){ store.poolTab = store.user.role==='supervisor' ? '2' : '1'; go('myorders'); }
+      else go('mine');
+    }
+    function goAlert(){ go(canView('myorders') ? 'myorders' : 'mine'); }
     watch(()=>store.currentPage, ()=> resetTableSort());   // 进入任一页面：所有时间列恢复默认倒序
     let timer=null;
     function syncNarrow(){ const n = window.innerWidth<=1024; store.isNarrow=n; if(n) store.sidebarCollapsed=true; }  // 窄屏默认收起侧栏为抽屉
@@ -1784,7 +1989,7 @@ const App = {
       window.addEventListener('resize', syncNarrow);
     });
     onBeforeUnmount(()=>{ if(timer)clearInterval(timer); window.removeEventListener('resize', syncNarrow); stopTimers(); });
-    return { store, menu, pageTitle, roleColor, alertCount, clock, go, back, toggleSide, canBack, crumbs, relogin, goView };
+    return { store, menu, pageTitle, roleColor, alertCount, clock, go, back, toggleSide, canBack, crumbs, relogin, goView, goAlert };
   }
 };
 
@@ -1803,7 +2008,8 @@ app.component('doc-page', DocPage);
 app.component('dashboard-page', DashboardPage);
 app.component('eval-page', EvalPage);
 app.component('guard-page', GuardPage);
-app.component('my-orders-page', MyOrdersPage);
+app.component('my-orders-page', PoolPage);
+app.component('my-work-page', MinePage);
 app.mount('#app');
 </script>
 </body>
