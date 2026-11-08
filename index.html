@@ -1296,9 +1296,9 @@ const EvalPage = {
   <div class="wb-card" style="padding:16px;">
     <div class="wb-section-title">评测集管理后台 <span class="wb-demo-tag">仅主管可见</span></div>
     <div class="wb-stats" style="margin-bottom:14px;">
-      <div class="wb-stat"><div class="n" style="color:var(--wb-red)">{{metrics.hallu}}%</div><div class="l">幻觉率</div></div>
-      <div class="wb-stat"><div class="n" style="color:var(--wb-green)">{{metrics.block}}%</div><div class="l">护栏拦截率</div></div>
-      <div class="wb-stat"><div class="n" style="color:var(--wb-blue)">{{metrics.recall}}%</div><div class="l">有效召回率</div></div>
+      <div class="wb-stat"><div class="n" style="color:var(--wb-red)">{{metrics.hallu}}%</div><div class="l">幻觉率</div><div class="wb-mini" style="margin-top:4px;line-height:1.4;">经双盲评审判定含幻觉（参数错误 / 过期文档 / 无依据生成）的评测条目 ÷ 全部评测条目</div></div>
+      <div class="wb-stat"><div class="n" style="color:var(--wb-green)">{{metrics.block}}%</div><div class="l">护栏拦截率</div><div class="wb-mini" style="margin-top:4px;line-height:1.4;">命中高风险参数护栏规则（如超硬上限）并被成功拦截、禁止放行超限值的请求占比</div></div>
+      <div class="wb-stat"><div class="n" style="color:var(--wb-blue)">{{metrics.recall}}%</div><div class="l">有效召回率</div><div class="wb-mini" style="margin-top:4px;line-height:1.4;">回答能正确检索并引用对应参考溯源文档的评测条目 ÷ 全部评测条目</div></div>
       <div class="wb-stat"><div class="n">{{store.evalGold.length+store.evalBlind.length}}</div><div class="l">评测条目总数</div></div>
     </div>
     <el-tabs>
