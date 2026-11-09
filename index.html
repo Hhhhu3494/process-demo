@@ -18,6 +18,8 @@
       --wb-side:#1d5fe8; --wb-side-hover:#3b7bf0;   /* 导航栏蓝色（较浅） */
       --wb-bg:#f0f2f5; --wb-line:#e3e8ef; --wb-text:#1f2733; --wb-sub:#6b7785;
       --wb-red:#f5222d; --wb-yellow:#faad14; --wb-green:#52c41a;
+      /* 上下文超时预警专用：浅橙，仅用于柔和提示，不使用强阻断红色 */
+      --wb-warn:#d46b08; --wb-warn-bg:#fff7e6; --wb-warn-line:#ffd591;
       /* 密度契约：主区内边距 / 区块间距 / 卡片内边距，平板与矮屏统一收紧 */
       --wb-main-pad:18px; --wb-gap:14px; --wb-card-pad:14px;
     }
@@ -84,27 +86,119 @@
     .wb-qa-top{ flex:0 0 auto; padding:12px 16px; }
     .wb-qa-body{ flex:1 1 auto; min-height:0; display:flex; gap:var(--wb-gap); align-items:stretch; }
     .wb-chat-card{ flex:1 1 auto; min-width:0; min-height:0; padding:var(--wb-card-pad); display:flex; flex-direction:column; }
-    .wb-ctx-bar{ flex:0 0 auto; background:#f7f9fc; border:1px solid var(--wb-line); border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+    /* 上下文状态栏：标题 + 字段 / 空态文案 + 清空按钮同处一行，纵向收紧为窄条 */
+    .wb-ctx-bar{ flex:0 0 auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+      background:#f7f9fc; border:1px solid var(--wb-line); border-radius:8px; padding:6px 10px; margin-bottom:10px; }
+    .wb-ctx-title{ font-weight:700; font-size:13px; line-height:24px; white-space:nowrap; flex:0 0 auto; }
+    .wb-ctx-empty{ flex:1 1 auto; min-width:0; line-height:24px; }
+    .wb-ctx-clear{ margin-left:auto; flex:0 0 auto; }
     .wb-chat{ flex:1 1 auto; min-height:0; height:auto; overflow:auto; padding:10px 4px; }
-    .wb-composer{ flex:0 0 auto; display:flex; gap:8px; margin-top:8px; }
-    .wb-composer-actions{ flex:0 0 auto; display:flex; gap:8px; margin-top:10px; }
-    .wb-case-card{ flex:0 0 300px; width:300px; min-height:0; padding:var(--wb-card-pad); overflow:auto; }
+    .wb-composer{ flex:0 0 auto; display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
+    /* flex-basis:0 覆盖 el-input 默认 width:100%，避免把三个按钮挤到第二行 */
+    .wb-composer .el-input{ flex:1 1 0%; width:auto; min-width:180px; }
+    .wb-composer .wb-btn-last{ margin-left:auto; }
+    @media (max-width:768px){ .wb-composer .el-button{ min-height:44px; } }
+    .wb-side-col{ flex:0 0 300px; width:300px; min-height:0; display:flex; flex-direction:column; gap:var(--wb-gap); overflow:hidden; }
+    .wb-sess-card{ flex:0 0 auto; padding:var(--wb-card-pad); }
+    /* 演示案例库吃掉侧栏剩余高度并内部滚动：会话列表增减都不会把它整块挤出视口 */
+    .wb-case-card{ flex:1 1 auto; width:auto; min-height:0; overflow:auto; padding:var(--wb-card-pad); }
     /* ===== 平板 / 矮屏：收紧纵向密度，一屏内完整看到输入区 ===== */
     @media (max-height:900px), (max-width:1024px){
       :root{ --wb-main-pad:10px; --wb-gap:10px; --wb-card-pad:10px; }
       .wb-qa-top{ padding:8px 12px; }
-      .wb-ctx-bar{ padding:8px 10px; margin-bottom:8px; }
+      .wb-ctx-bar{ padding:5px 8px; margin-bottom:6px; }
       .wb-chat{ padding:6px 4px; }
       .wb-bubble{ padding:8px 12px; margin-bottom:8px; }
       .wb-composer{ margin-top:6px; }
-      .wb-composer-actions{ margin-top:6px; }
-      .wb-case-card{ flex-basis:280px; width:280px; }
+      .wb-side-col{ flex-basis:280px; width:280px; }
       .wb-section-title{ margin-bottom:8px; }
     }
     .wb-bubble{ max-width:76%; padding:10px 14px; border-radius:10px; margin-bottom:12px; line-height:1.6; font-size:14px; white-space:pre-wrap; word-break:break-word; }
     .wb-bubble.user{ background:var(--wb-blue); color:#fff; margin-left:auto; border-bottom-right-radius:2px; }
     .wb-bubble.bot{ background:#f4f7fb; border:1px solid var(--wb-line); margin-right:auto; border-bottom-left-radius:2px; }
     .wb-bubble.sys{ background:#fffbe6; border:1px solid #ffe58f; color:#ad6800; margin:0 auto 12px; max-width:90%; text-align:center; font-size:13px; }
+    .wb-ctx-warn{ background:var(--wb-warn-bg); border:1px solid var(--wb-warn-line); color:var(--wb-warn);
+      border-radius:6px; padding:8px 10px; margin:0 auto 12px; max-width:90%; font-size:12px; line-height:1.6; }
+    /* ===== 分级追问风控：柔和前置提醒 / 上限按钮 / 会话列表【风险会话】标签 ===== */
+    .wb-follow-warn{ background:var(--wb-warn-bg); border:1px solid var(--wb-warn-line); color:var(--wb-warn);
+      border-radius:8px; padding:10px 12px; margin:0 auto 12px; max-width:90%; font-size:13px; line-height:1.7; }
+    .wb-follow-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .wb-follow-actions .wb-btn-warn{ background:#fff; border-color:var(--wb-warn-line); color:var(--wb-warn); }
+    .wb-follow-actions .wb-btn-warn:hover{ background:#ffe7ba; border-color:var(--wb-warn); color:var(--wb-warn); }
+    @media (max-width:768px){ .wb-follow-actions .el-button{ min-height:44px; } }
+    .wb-ctx-bar .wb-context-chip{ margin:0; }
+    .wb-risk-tag{ background:var(--wb-warn-bg); color:var(--wb-warn); border:1px solid var(--wb-warn-line);
+      font-size:11px; line-height:18px; padding:0 6px; border-radius:4px; white-space:nowrap; flex:0 0 auto; }
+    .wb-sess-list{ display:flex; flex-direction:column; gap:6px; }
+    .wb-sess-item{ border:1px solid var(--wb-line); border-radius:8px; padding:6px 9px; background:#fff; }
+    .wb-sess-item.is-active{ border-color:#adc6ff; background:#f7faff; }
+    .wb-sess-head{ display:flex; align-items:center; gap:6px; }
+    .wb-sess-title{ font-size:13px; font-weight:600; flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .wb-sess-meta{ font-size:11px; color:var(--wb-sub); margin-top:3px; }
+    /* 演示案例卡片：单行收紧，完整描述保留在 title 悬浮提示中。
+       用 .wb-case-card 前缀提高优先级，避免被后面的 .role-card / .wb-tip 覆盖。 */
+    .wb-case-card .wb-case-item{ margin-bottom:8px; padding:6px 9px; border-width:1px; }
+    .wb-case-card .wb-case-name{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .wb-case-card .wb-case-desc{ margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .wb-case-card .wb-case-tip{ font-size:11px; line-height:1.5; padding:8px 10px; }
+    /* ===== 站内通知 / 内置问卷（低频浮层：沿用工业蓝主色，仅未读红点用 --wb-red）===== */
+    .wb-notice-wrap{ position:relative; flex:0 0 auto; }
+    .wb-notice-bell .el-button{ min-width:32px; min-height:32px; }
+    .wb-notice-panel{ position:absolute; right:0; top:40px; width:360px; max-height:520px; overflow:auto;
+      background:#fff; border:1px solid var(--wb-line); border-radius:8px; padding:12px;
+      box-shadow:0 8px 28px rgba(15,44,92,.16); z-index:2000; }
+    .wb-notice-head{ display:flex; align-items:center; gap:10px; padding-bottom:10px; border-bottom:1px solid var(--wb-line); }
+    .wb-notice-head b{ font-size:14px; }
+    .wb-notice-head .el-button{ margin-left:auto; }
+    .wb-notice-empty{ padding:24px 0; text-align:center; color:var(--wb-sub); font-size:12px; }
+    .wb-notice-card{ border:1px solid var(--wb-line); border-radius:8px; padding:10px 12px; margin-top:10px; background:#fff; }
+    .wb-notice-card.is-unread{ border-color:#adc6ff; background:#f7faff; }
+    .wb-notice-card.is-done{ background:#fafbfc; }
+    .wb-notice-line{ display:flex; align-items:center; gap:6px; }
+    .wb-notice-dot{ width:8px; height:8px; border-radius:50%; background:var(--wb-red); flex:0 0 auto; }
+    .wb-notice-title{ font-size:13px; font-weight:600; flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .wb-notice-done{ font-size:11px; color:var(--wb-green); background:#e6f7e6; border:1px solid #b7eb8f; border-radius:4px; padding:0 6px; line-height:18px; flex:0 0 auto; }
+    .wb-notice-body{ margin-top:6px; line-height:1.6; }
+    .wb-notice-time{ margin-top:4px; }
+    .wb-notice-actions{ display:flex; align-items:center; gap:8px; margin-top:10px; }
+    .wb-notice-alert{ display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer;
+      margin-top:12px; padding-top:10px; border-top:1px dashed var(--wb-line); font-size:12px; color:var(--wb-sub); }
+    .wb-notice-alert:hover{ color:var(--wb-blue); }
+    /* 问卷：居中模态，半透明遮罩由 el-dialog 的 modal-class 提供 */
+    .wb-survey-overlay{ background-color:rgba(15,23,42,.45); }
+    .wb-survey-q{ margin-bottom:18px; }
+    .wb-survey-label{ font-size:13px; font-weight:600; margin-bottom:10px; }
+    .wb-survey-req{ font-size:11px; font-weight:400; color:var(--wb-red); margin-left:6px; }
+    .wb-survey .el-radio-group{ display:flex; flex-wrap:wrap; gap:8px 16px; }
+    /* 问卷顶部说明小字：克制、不抢标题 */
+    .wb-survey-note{ font-size:12px; line-height:1.7; color:var(--wb-sub); margin:-4px 0 16px; }
+    /* 运营后台 · 问卷结果面板 */
+    .wb-res-row{ display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+    .wb-res-label{ flex:0 0 88px; font-size:12px; color:var(--wb-text); }
+    .wb-res-bar{ flex:1 1 auto; height:10px; border-radius:5px; background:#eef2f8; overflow:hidden; }
+    .wb-res-bar > div{ display:block; height:100%; background:var(--wb-blue); border-radius:5px; }
+    .wb-res-num{ flex:0 0 54px; text-align:right; font-size:12px; color:var(--wb-sub); }
+    .wb-res-comment{ border:1px solid var(--wb-line); border-radius:8px; padding:9px 11px; margin-bottom:8px; font-size:13px; line-height:1.7; }
+    .wb-res-comment .wb-mini{ margin-bottom:4px; }
+    @media (max-width:768px){ .wb-res-label{ flex-basis:72px; } }
+    /* 看板新增静态指标卡：与 .wb-stat 同风格、同高度，不暗示可点击 */
+    .wb-stat-static{ min-height:76px; }
+    @media (max-width:640px){
+      .wb-notice-panel{ width:min(360px, calc(100vw - 32px)); right:-40px; }
+      .wb-survey-dialog{ width:calc(100vw - 32px)!important; }   /* 窄屏仍非全屏 */
+      .wb-notice-actions .el-button{ min-height:44px; }
+    }
+    @media (max-width:768px){ .wb-notice-bell .el-button{ min-width:44px; min-height:44px; } }
+
+    /* ===== 会话存档详情：逐条完整聊天记录 ===== */
+    .wb-arc-meta{ display:flex; flex-wrap:wrap; gap:8px 18px; font-size:12px; color:var(--wb-sub);
+      background:#f7f9fc; border:1px solid var(--wb-line); border-radius:8px; padding:10px 12px; }
+    .wb-arc-meta b{ color:var(--wb-text); font-weight:600; }
+    .wb-archive-log{ max-height:46vh; min-height:120px; overflow:auto; padding:6px 10px 10px;
+      border:1px solid var(--wb-line); border-radius:8px; background:#fff; }
+    .wb-archive-log .wb-bubble{ max-width:92%; }
+    .wb-arc-row{ margin-bottom:8px; }
+    .wb-arc-idx{ font-size:11px; color:var(--wb-sub); margin:0 0 4px 2px; }
     .wb-mini{ font-size:12px; color:var(--wb-sub); }
     .wb-section-title{ font-size:15px; font-weight:700; margin:0 0 12px; display:flex; align-items:center; gap:8px; }
     .wb-demo-tag{ background:#f0f5ff; color:var(--wb-blue); border:1px solid #adc6ff; font-size:11px; padding:1px 6px; border-radius:4px; }
@@ -134,6 +228,70 @@
     .wb-src-caret.up{ border-top:0; border-bottom:5px solid var(--wb-blue); }
     /* 窄屏：扩大链接触摸热区（负 margin 抵消内边距，不改变行高与视觉） */
     @media (max-width:768px){ .wb-src-more{ min-height:44px; } .wb-src-title{ display:inline-block; padding:8px 2px; margin:-8px -2px; } }
+    /* ===== 点赞踩统一反馈：气泡右下角；仅正式工艺回答高亮，其余 3 类弱化但始终可点击 =====
+       弱化 = 浅灰 + 尺寸略小 + 不突出，不等于禁用：默认保持可读灰度，悬停/选中给出明确反馈。
+       二级面板内联在消息区内部（非模态浮层），因此永远不会盖住底部对话输入框。 */
+    .wb-fb{ margin-top:8px; display:flex; flex-direction:column; align-items:flex-end; white-space:normal; text-align:left; }
+    .wb-fb-row{ display:flex; align-items:center; gap:4px; }
+    .wb-fb-btn{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:26px;
+      padding:0; border:1px solid transparent; border-radius:5px; background:transparent;
+      font-size:15px; line-height:1; cursor:pointer; opacity:.92; }
+    .wb-fb-btn:hover{ background:#e8effc; border-color:#c6d8ff; opacity:1; }
+    .wb-fb-btn:active{ transform:translateY(1px); }
+    .wb-fb-btn:focus-visible{ outline:2px solid var(--wb-blue); outline-offset:1px; }
+    .wb-fb-btn.up{ background:#e6f7e6; border-color:#b7eb8f; }
+    .wb-fb-btn.down{ background:#fff1f0; border-color:#ffa39e; }
+    .wb-fb.is-weak .wb-fb-btn{ width:24px; height:22px; font-size:12px; opacity:.62; filter:grayscale(1); }
+    .wb-fb.is-weak .wb-fb-btn:hover{ opacity:1; filter:grayscale(.3); background:#eef3fa; border-color:#c9d6e6; }
+    /* 选中态：去灰度 + 浅蓝描边，只表达「已记录」，不加醒目语义色，不破坏弱化层级 */
+    .wb-fb.is-weak .wb-fb-btn.up,.wb-fb.is-weak .wb-fb-btn.down{
+      opacity:1; filter:none; background:#f2f6fd; border-color:#a9c2f0; }
+    @media (prefers-reduced-motion: reduce){ .wb-fb-btn:active{ transform:none; } }
+    .wb-fb-tag{ margin-right:5px; padding:0 6px; line-height:18px; border-radius:4px;
+      font-size:11px; color:#389e0d; background:#e6f7e6; border:1px solid #b7eb8f; }
+    .wb-fb-panel{ width:min(340px,100%); margin-top:6px; padding:10px 12px;
+      background:#fff; border:1px solid var(--wb-line); border-radius:8px;
+      font-size:12px; color:var(--wb-text); box-shadow:0 6px 18px rgba(15,44,92,.10); }
+    .wb-fb-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:8px;
+      font-weight:600; margin-bottom:8px; }
+    .wb-fb-close{ padding:0 4px; border:0; background:transparent; color:var(--wb-sub);
+      font-size:16px; line-height:20px; cursor:pointer; }
+    .wb-fb-close:focus-visible{ outline:2px solid var(--wb-blue); }
+    .wb-fb-panel .el-radio-group{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
+    .wb-fb-panel .el-radio{ height:26px; margin-right:0; }
+    .wb-fb-panel .el-textarea{ margin-top:8px; }
+    .wb-fb-panel-foot{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .wb-fb-panel-foot .wb-mini{ flex:1 1 auto; min-width:110px; }
+    @media (max-width:768px){
+      .wb-fb-btn,.wb-fb.is-weak .wb-fb-btn{ width:44px; height:44px; font-size:14px; }
+      .wb-fb-tag-chip{ min-height:44px; }
+    }
+    /* ===== 评测后台 · 用户反馈汇总 ===== */
+    .wb-fb-summary{ margin-top:16px; padding-top:14px; border-top:1px solid var(--wb-line); }
+    .wb-fb-kpis{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .wb-fb-kpi{ flex:1 1 150px; min-width:130px; background:#f7f9fc; border:1px solid var(--wb-line);
+      border-radius:8px; padding:8px 12px; }
+    .wb-fb-kpi b{ display:block; font-size:20px; line-height:1.2; }
+    .wb-fb-kpi span{ font-size:11px; color:var(--wb-sub); }
+    .wb-fb-group{ margin-top:14px; }
+    .wb-fb-group-title{ font-size:13px; font-weight:700; margin-bottom:8px; }
+    /* 按标签分类：标签 chip 分组计数 + 点击筛选下方明细表 */
+    .wb-fb-tags{ margin-top:12px; padding:10px 12px; background:#f7f9fc;
+      border:1px solid var(--wb-line); border-radius:8px; }
+    .wb-fb-tag-list{ display:flex; flex-wrap:wrap; gap:8px; }
+    .wb-fb-tag-chip{ display:inline-flex; align-items:center; gap:6px; min-height:28px; padding:0 10px;
+      border:1px solid var(--wb-line); border-radius:14px; background:#fff; color:var(--wb-text);
+      font-size:12px; cursor:pointer; }
+    .wb-fb-tag-chip b{ font-size:12px; color:var(--wb-sub); }
+    .wb-fb-tag-chip:hover{ background:#f2f6fd; border-color:#a9c2f0; }
+    .wb-fb-tag-chip:focus-visible{ outline:2px solid var(--wb-blue); outline-offset:1px; }
+    .wb-fb-tag-chip.is-active{ background:#e8effc; border-color:var(--wb-blue); color:var(--wb-blue); }
+    .wb-fb-tag-chip.is-active b{ color:var(--wb-blue); }
+    .wb-fb-filter-note{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+      margin-top:8px; font-size:12px; color:var(--wb-sub); }
+    .wb-fb-filter-note button{ padding:2px 4px; border:0; background:transparent;
+      color:var(--wb-blue); font-size:12px; cursor:pointer; }
+    .wb-fb-filter-note button:focus-visible{ outline:2px solid var(--wb-blue); }
     /* ===== 无可信检索来源 · 柔和浅黄兜底气泡（区别于正常回答 / 红色告警） ===== */
     .wb-bubble.nomatch{ background:#fffaf0; border:1px solid #f0dcae; color:var(--wb-text);
       margin-right:auto; border-bottom-left-radius:2px; }
@@ -146,6 +304,11 @@
     .wb-fade-enter-from,.wb-fade-leave-to{ opacity:0; }
     .el-table .cell{ font-size:13px; }
     .wb-stats{ display:flex; gap:14px; flex-wrap:wrap; }
+    /* 看板 7 卡统一列宽：5 列网格，第二行 2 张与第一行等宽，右侧自然留白 */
+    .wb-stats-grid{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px; }
+    @media (max-width:1200px){ .wb-stats-grid{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
+    @media (max-width:900px){ .wb-stats-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media (max-width:640px){ .wb-stats-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
     .wb-stat{ flex:1; min-width:160px; background:#fff; border:1px solid var(--wb-line); border-radius:10px; padding:14px 16px; }
     .wb-stat .n{ font-size:26px; font-weight:800; }
     .wb-stat .l{ font-size:12px; color:var(--wb-sub); margin-top:2px; }
@@ -164,6 +327,14 @@
     .wb-chart-bar{ width:100%; max-width:52px; background:var(--wb-blue); border-radius:4px 4px 0 0; transition:height .3s; }
     .wb-chart-axis{ display:flex; gap:10px; padding:6px 4px 0; }
     .wb-chart-x{ flex:1; min-width:0; text-align:center; font-size:11px; color:var(--wb-sub); white-space:nowrap; }
+    /* 提报 / 闭环双柱：同一日期并列两根柱，共用同一纵轴比例；图例紧贴标题右侧 */
+    .wb-chart-legend{ display:flex; align-items:center; gap:14px; font-size:11px; color:var(--wb-sub); }
+    .wb-chart-legend span{ display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+    .wb-chart-lg{ display:inline-block; width:10px; height:10px; border-radius:2px; }
+    .wb-chart-pair{ display:flex; align-items:flex-end; justify-content:center; gap:4px; width:100%; height:100%; }
+    .wb-chart-slot{ flex:1 1 0%; max-width:52px; min-width:0; height:100%;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }
+    .wb-chart-bar.is-close{ background:var(--wb-green); }
     .login-wrap{ height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#0f2c5c 0%,#1d4ed8 100%); }
     .login-box{ width:960px; max-width:94vw; background:#fff; border-radius:16px; overflow:hidden; display:flex; box-shadow:0 24px 60px rgba(0,0,0,.25); }
     .login-left{ flex:1; background:linear-gradient(160deg,#0f2c5c,#1d4ed8); color:#fff; padding:48px 40px; }
@@ -185,13 +356,17 @@ const EP = ElementPlus;
 const ROLES = {
   team_lead:  { key:'team_lead',  label:'班组长',        short:'班组长',   color:'#1d5fe8' },
   engineer:   { key:'engineer',   label:'工艺工程师',    short:'工程师',   color:'#1d4ed8' },
-  supervisor: { key:'supervisor', label:'工艺主管 / QA', short:'主管',     color:'#722ed1' }
+  supervisor: { key:'supervisor', label:'工艺主管 / QA', short:'主管',     color:'#722ed1' },
+  // 运营（内部标识沿用 admin，兼容既有权限矩阵）：仅站内通知下发 / 问卷配置推送；
+  // 可见页面仅「对话测试页」(qa) 与「问卷设置页」(notice)；
+  // 无工单处理 / 文档管理 / 检索策略 / 风控护栏配置权限
+  admin:      { key:'admin',      label:'运营',          short:'运营',     color:'#0f2c5c' }
 };
 
 // 页面权限隔离（pageKey -> 可见角色）
 const PAGE_ROLES = {
-  login:    ['team_lead','engineer','supervisor'],
-  qa:       ['team_lead','engineer','supervisor'],
+  login:    ['team_lead','engineer','supervisor','admin'],
+  qa:       ['team_lead','engineer','supervisor','admin'],
   archive:  ['team_lead','engineer','supervisor'],
   audit:    ['team_lead','engineer','supervisor'],
   docs:     ['team_lead','engineer','supervisor'],
@@ -199,7 +374,8 @@ const PAGE_ROLES = {
   mine:     ['team_lead','engineer','supervisor'], // 我的工单：三类角色均可见，仅个人相关工单
   dashboard:['supervisor'],                       // 主管数据看板：仅主管，纯统计视图
   eval:     ['supervisor'],                      // 评测集后台：仅主管
-  guard:    ['supervisor']                       // 规则引擎/护栏：仅主管
+  guard:    ['supervisor'],                     // 规则引擎/护栏：仅主管
+  notice:   ['admin']                          // 问卷设置页（通知下发）：仅运营；主管/工程师/班组长无下发入口
 };
 
 const MENU = [
@@ -211,7 +387,8 @@ const MENU = [
   { key:'audit',    title:'个人审计日志', icon:'Document' },
   { key:'dashboard',title:'主管数据看板', icon:'DataLine' },
   { key:'eval',     title:'评测集管理',   icon:'EditPen' },
-  { key:'guard',    title:'规则引擎&护栏',icon:'Setting' }
+  { key:'guard',    title:'规则引擎&护栏',icon:'Setting' },
+  { key:'notice',   title:'通知与问卷',  icon:'Bell' }
 ];
 
 // 角色能力
@@ -280,7 +457,26 @@ const DOC_EFFECTIVE = {
   'D-SOP-01':'2025-11-20', 'D-SOP-02':'2026-01-08', 'D-EXP-01':'2026-02-14', 'D-EXP-02':'2026-03-02',
   'D-WIN-01':'2026-03-18', 'D-WIN-02':'2026-04-09', 'D-CASE-01':'2026-03-20', 'D-CASE-02':'2026-05-12', 'D-CASE-03':'2026-07-30'
 };
-DOCUMENTS.forEach(d=>{ d.effective = DOC_EFFECTIVE[d.id] || '2026-01-01'; });
+// 文档版本号 / 失效时间 / 上传人（演示元数据：原型无文档管理后台，按生效日期与既有审核人推算；
+// 失效时间早于当天即对应列表「失效」状态，D-CASE-03 已失效，其余为未来到期日）
+const DOC_META = {
+  'D-SOP-01': { ver:'v3.2', expire:'2027-11-20', uploader:'王主管' },
+  'D-SOP-02': { ver:'v2.8', expire:'2028-01-08', uploader:'李工程师' },
+  'D-EXP-01': { ver:'v1.6', expire:'2028-02-14', uploader:'张工(主管)' },
+  'D-EXP-02': { ver:'v1.4', expire:'2028-03-02', uploader:'周工程师' },
+  'D-WIN-01': { ver:'v2.1', expire:'2028-03-18', uploader:'王主管' },
+  'D-WIN-02': { ver:'v1.9', expire:'2028-04-09', uploader:'李工程师' },
+  'D-CASE-01':{ ver:'v1.0', expire:'2028-03-20', uploader:'张工(主管)' },
+  'D-CASE-02':{ ver:'v1.0', expire:'2028-05-12', uploader:'李工' },
+  'D-CASE-03':{ ver:'v1.0', expire:'2026-09-30', uploader:'王主管' }
+};
+DOCUMENTS.forEach(d=>{
+  d.effective = DOC_EFFECTIVE[d.id] || '2026-01-01';
+  const m = DOC_META[d.id] || {};
+  if(!d.ver) d.ver = m.ver || '—';       // 历史闭环案例原本无版本号，补齐 v1.0
+  d.expire   = m.expire   || '—';
+  d.uploader = m.uploader || '—';
+});
 
 // 评测集
 const EVAL_GOLD = [
@@ -390,24 +586,12 @@ const SEED_ORDERS = [
 ];
 
 // 会话存档种子
+// 4 条种子存档分别对应首页案例 1-4；messages 由下方「按案例模拟」代码填充
 const SEED_SESSIONS = [
-  { id:'S-2207', title:'P55 Mura 良率排查会话', time:'2026-03-18 09:10', risk:'高', status:'已闭环', orderTag:'WO-1042',
-    messages:[
-      {r:'user',t:'P55 Array 曝光后 Mura 严重，良率掉了两个点。'},
-      {r:'bot',t:'上下文已记录：Array / P55 / Mura。请确认当前曝光能量设定值？',risk:'中'},
-      {r:'user',t:'实测 31.2 mJ，比标准高。'},
-      {r:'bot',t:'检测到高风险参数：曝光能量 31.2 mJ（上限 28 mJ），已标红并触发护栏拦截，禁止输出放行数值，需走 ECN 复核流程。',risk:'高',guard:true},
-      {r:'bot',t:'风险提示升级为「红色」，建议登记人工求助工单并升级主管。',risk:'高'},
-      {r:'user',t:'好，帮我登记工单。'}
-    ] },
-  { id:'S-3310', title:'CF 温度耦合漂移分析', time:'2026-08-01 14:00', risk:'高', status:'已存档', orderTag:'WO-1091',
-    messages:[
-      {r:'user',t:'CF M32 最近色偏还伴随膜厚波动。'},
-      {r:'bot',t:'已记录 CF / M32 / 色偏，并关联膜厚波动。',risk:'中'},
-      {r:'user',t:'烤箱温度也偏高。'},
-      {r:'bot',t:'多因素累积识别：烤箱温度 + 膜厚 + 色偏 耦合漂移，属复合耦合异常。按规则不强行推理，直接触发人工工单流程。',risk:'高'},
-      {r:'system',t:'系统已自动生成工单 WO-1091 并模拟推送「工程师群 + 主管群」双向并行处理。'}
-    ] }
+  { id:'S-2201', title:'Array P55 模糊提问上下文补全', time:'2026-03-18 08:42', risk:'中', status:'已闭环', orderTag:'', messages:[] },
+  { id:'S-2207', title:'P55 Mura 良率排查会话', time:'2026-03-18 09:10', risk:'高', status:'已闭环', orderTag:'WO-1042', messages:[] },
+  { id:'S-3310', title:'CF 温度耦合漂移分析', time:'2026-08-01 14:00', risk:'高', status:'已存档', orderTag:'WO-1091', messages:[] },
+  { id:'S-4402', title:'知识库零命中兜底会话', time:'2026-08-21 16:35', risk:'低', status:'已存档', orderTag:'', messages:[] }
 ];
 
 // 审计日志种子
@@ -418,17 +602,20 @@ const SEED_AUDIT = [
     risk:'高', guard:false, doc:'D-CASE-03', ctx:'CF / M32 / 色偏' }
 ];
 
+// 演示案例逐条消息弹出间隔（ms）：4 个案例统一放慢播放，便于逐轮观察；「跳过流式输出」仍可一次性补齐
+const CASE_PLAY_INTERVAL_MS = 1800;
+
 // 预制面试脚本（4 套）
 const CASE_SCRIPTS = {
   1:{ name:'案例1 · 模糊提问→单条递进追问补全', msgs:[
       {r:'user',t:'最近屏幕有点问题。'},
       {r:'bot',t:'为精准定位，请补充：① 所属制程（Array/CF/Cell）？② 产品型号？③ 具体不良现象（如 Mura/亮点/暗斑）？',risk:'低'},
       {r:'user',t:'Array，P55，Mura。'},
-      {r:'bot',t:'已补全上下文：制程 Array / 产品 P55 / 不良 Mura。建议查阅《Mura 不良快速处置卡 D-EXP-01》。',risk:'中'}
+      {r:'bot',t:'已补全上下文：制程 Array / 产品 P55 / 不良 Mura。建议查阅《Mura 不良快速处置卡 D-EXP-01》。',risk:'中',setCtx:{process:'Array',product:'P55',defect:'Mura'}}
   ]},
   2:{ name:'案例2 · 普通不良多轮→风险升级+参数标红+护栏', msgs:[
       {r:'user',t:'P55 Array 曝光后 Mura 严重。'},
-      {r:'bot',t:'上下文已记录：Array / P55 / Mura。请确认当前曝光能量设定值？',risk:'中'},
+      {r:'bot',t:'上下文已记录：Array / P55 / Mura。请确认当前曝光能量设定值？',risk:'中',setCtx:{process:'Array',product:'P55',defect:'Mura'}},
       {r:'user',t:'我测到 31.2 mJ。'},
       {r:'bot',t:'检测到高风险参数：曝光能量 31.2 mJ（上限 28 mJ），已标红并触发护栏拦截，禁止输出放行数值，需走 ECN 复核流程。',risk:'高',guard:true,
         params:[{name:'曝光能量',value:'31.2 mJ',limit:'≤28 mJ',over:true}]},
@@ -436,7 +623,7 @@ const CASE_SCRIPTS = {
   ]},
   3:{ name:'案例3 · 多轮累积→复合异常→自动工单+企微推送', msgs:[
       {r:'user',t:'CF M32 最近色偏还伴随膜厚波动。'},
-      {r:'bot',t:'已记录 CF / M32 / 色偏，并关联膜厚波动。',risk:'中'},
+      {r:'bot',t:'已记录 CF / M32 / 色偏，并关联膜厚波动。',risk:'中',setCtx:{process:'CF',product:'M32',defect:'色偏'}},
       {r:'user',t:'烤箱温度也偏高。'},
       {r:'bot',t:'多因素累积识别：烤箱温度 + 膜厚 + 色偏 耦合漂移，属复合耦合异常。按规则不强行推理，直接触发人工工单流程。',risk:'高',
         params:[{name:'烤箱温度',value:'241℃',limit:'≤235℃',over:true}]},
@@ -450,6 +637,106 @@ const CASE_SCRIPTS = {
       {r:'system',t:'两次提问均未命中 SOP / 异常处置卡知识库，系统未输出任何 AI 推测答案、不展示溯源。请点击上方浅黄气泡内的「转人工咨询」或「重新提问」。'}
   ]}
 };
+
+/* 会话存档详情：按首页 4 个案例模拟逐条完整聊天记录，顺序与案例 1-4 一一对应 */
+SEED_SESSIONS.forEach((s,i)=>{ s.messages = CASE_SCRIPTS[i+1].msgs.map(m=>({...m})); });
+
+/* ========================= 分级追问风控 · 规则常量 =========================
+   高危调参场景严格限定为以下 5 类；单纯不良现象 / 故障诱因 / SOP 流程科普等低风险咨询不限制轮次。
+   风险等级与语义链路由 classifyRisk() 按显式术语表自动判定，用户只需输入问题、无需选择类型；
+   状态机只接收判定结果并做链路标识相等比较，不参与语义识别。 */
+const HIGH_RISK_TOPICS = ['工艺窗口','设备阈值','调参方案','禁限工艺','制程变更'];
+const LOW_RISK_TOPIC   = '低风险咨询';
+const FOLLOW_LIMIT     = 3;                 // 单链路最多 3 轮连续追问
+const FOLLOW_WARN_AT   = 2;                 // 第 2 轮结束时柔和前置提醒
+
+/* ---- 语义自动判定（后台规则在原型内的确定性实现）----
+   仅按显式术语表做「包含」判定并映射到 5 类枚举，不调用模型、不做相似度 / 意图推断。
+   链路主体取提问中按固定词表首个命中的工艺对象：同类别 + 同主体 = 延续同一诉求；
+   类别或主体变化 = 全新独立链路；未命中任何高危术语 = 低风险咨询。 */
+const RISK_TERMS = {
+  '工艺窗口': ['工艺窗口','窗口上限','窗口下限','规格窗口','放宽窗口','窗口范围'],
+  '设备阈值': ['设备阈值','阈值','报警阈值','设定上限','设定下限'],
+  '调参方案': ['调参','调整参数','参数方案','推演','阶梯','试做','参数优化','怎么调','上调','放宽到'],
+  '禁限工艺': ['禁限工艺','禁用工艺','禁止使用','限制工艺','受限工艺','禁用材料'],
+  '制程变更': ['制程变更','工艺变更','ECN','变更单','换线','工艺路线']
+};
+const CHAIN_ENTITIES = ['Array','CF','Cell','P55','M32','曝光能量','烤箱温度','膜厚','涂布','蚀刻','显影','色偏','Mura'];
+function classifyRisk(text){
+  const t = String(text||'');
+  let topic = LOW_RISK_TOPIC;
+  for(let i=0;i<HIGH_RISK_TOPICS.length;i++){
+    const k = HIGH_RISK_TOPICS[i];
+    if(RISK_TERMS[k].some(w=>t.indexOf(w)>=0)){ topic=k; break; }
+  }
+  if(topic===LOW_RISK_TOPIC) return { topic, chain:'' };
+  let ent = '通用';
+  for(let j=0;j<CHAIN_ENTITIES.length;j++){
+    if(t.indexOf(CHAIN_ENTITIES[j])>=0){ ent=CHAIN_ENTITIES[j]; break; }
+  }
+  return { topic, chain:ent };
+}
+
+/* ========================= 点赞踩统一反馈 · 规则常量 =========================
+   4 类消息按内容确定性归类，无用户选择、无模型推理：
+   formal  带文档溯源 / Chunk 引用 / SOP 排查方案的正式工艺回答（唯一会弹二级面板的类型）
+   clarify 意图澄清 / 信息确认类追问
+   risk    风控通知类（高危提示、护栏拦截、高危三轮追问上限拦截提示）
+   zerohit 知识库 0 命中提示（👍 确实无对应资料 / 👎 知识库缺资料-0命中反馈）
+   只有 formal 点踩会弹出二级单选面板；其余一律后台静默记录、不弹面板。
+   弱化图标只表达视觉层级，全部图标均可点击、均会写入汇总记录，不存在禁用态。 */
+const FB_KIND_LABEL = {
+  formal:'正式工艺回答', clarify:'意图澄清 / 信息确认', risk:'风控通知', zerohit:'知识库0命中提示'
+};
+const FB_REASONS = ['答案来源不对/文档过时','不是我想要的内容','回答有错误（幻觉）','应该转人工','其他'];
+const FB_ZERO_TAG = '知识库缺资料-0命中反馈';
+/* 定稿标签体系：按「消息类型 × 反馈方向」确定性打标。formal 点踩的标签由二级面板所选原因决定，
+   因此此处留空；其余标签逐字来自规则定稿，评测后台按标签分类展示。 */
+const FB_VOTE_TAG = {
+  formal:  { up:'回答认可', down:'' },
+  clarify: { up:'追问反馈', down:'追问反馈' },
+  risk:    { up:'风控判定合理', down:'风控误拦截反馈' },
+  zerohit: { up:'确实无对应资料', down:FB_ZERO_TAG }
+};
+const FB_TAG_ORDER = ['回答认可','追问反馈','风控判定合理','风控误拦截反馈','确实无对应资料',FB_ZERO_TAG];
+const FB_UNTAGGED = '未分类（静默记录 / 反馈原因未填写）';
+/* 三轮上限拦截提示不是独立气泡，而是常驻提示条；绑定一条固定标识的风控通知消息 */
+const FB_CAP_MSG = {
+  fbId:'FB-CAP', r:'bot', fbKind:'risk', risk:'高',
+  t:'【风控拦截】当前为工艺参数咨询，最多支持3轮连续推演，后续建议转人工工单复核。'
+};
+/* 演示汇总数据：覆盖 4 类消息与 2 条 0 命中文档增补线索，便于评测后台直接查看 */
+const SEED_FEEDBACK = [
+  { id:'F-001', time:'2026-08-05 16:42', fbId:'FB-D1', session:'S-2207 · P55 Mura 良率排查会话',
+    question:'P55 Array 区域 Mura 如何排查？', kind:'formal', kindLabel:'正式工艺回答',
+    vote:'up', voteLabel:'回答认可', reason:'', comment:'',
+    excerpt:'建议查阅《Mura 不良快速处置卡 D-EXP-01》…',
+    chunk:'D-EXP-01｜Mura 按三级分等处置：先确认曝光能量与膜厚…', risk:'中', tags:['回答认可'], demo:true },
+  { id:'F-002', time:'2026-08-05 15:08', fbId:'FB-D2', session:'S-3310 · CF M32 色偏耦合异常会话',
+    question:'烤箱温度 241℃ 是否可以直接放行？', kind:'formal', kindLabel:'正式工艺回答',
+    vote:'down', voteLabel:'不认可', reason:'答案来源不对/文档过时', comment:'窗口规范已更新到 v2.2，请同步。',
+    excerpt:'检测到高风险参数：曝光能量已超硬上限…',
+    chunk:'D-WIN-01｜曝光能量标准窗口 22–28 mJ，硬上限 28 mJ…', risk:'高',
+    tags:['答案来源不对/文档过时'], demo:true },
+  { id:'F-003', time:'2026-08-05 11:26', fbId:'FB-D3', session:'S-2201 · Array P55 模糊提问上下文补全',
+    question:'最近屏幕有点问题。', kind:'clarify', kindLabel:'意图澄清 / 信息确认',
+    vote:'up', voteLabel:'认可', reason:'', comment:'',
+    excerpt:'为精准定位，请补充：① 所属制程？② 产品型号？…', chunk:'—', risk:'低', tags:['追问反馈'], demo:true },
+  { id:'F-004', time:'2026-08-05 10:53', fbId:'FB-D4', session:'S-3310 · CF M32 色偏耦合异常会话',
+    question:'我想继续调整调参方案。', kind:'risk', kindLabel:'风控通知',
+    vote:'down', voteLabel:'不认可', reason:'', comment:'',
+    excerpt:'【风控拦截】最多支持3轮连续推演…', chunk:'—', risk:'高', tags:['风控误拦截反馈'], demo:true },
+  { id:'F-005', time:'2026-08-04 09:31', fbId:'FB-D5', session:'当前会话（进行中）',
+    question:'设备保养周期是多久？', kind:'zerohit', kindLabel:'知识库0命中提示',
+    vote:'down', voteLabel:'不认可', reason:'', comment:'',
+    excerpt:'当前问题在 SOP、异常处置卡知识库中没有找到可信参考资料…', chunk:'—', risk:'—',
+    tags:[FB_ZERO_TAG], demo:true },
+  { id:'F-006', time:'2026-08-04 09:35', fbId:'FB-D6', session:'当前会话（进行中）',
+    question:'那洁净间的管理规范在哪里能查到？', kind:'zerohit', kindLabel:'知识库0命中提示',
+    vote:'up', voteLabel:'认可', reason:'', comment:'',
+    excerpt:'当前问题在 SOP、异常处置卡知识库中没有找到可信参考资料…', chunk:'—', risk:'—',
+    tags:['确实无对应资料'], demo:true }
+];
 
 /* ========================= 全局状态 ========================= */
 const store = reactive({
@@ -478,7 +765,34 @@ const store = reactive({
   isNarrow: typeof window!=='undefined' ? window.innerWidth<=1024 : false,  // 窄屏(≤1024)标记，用于自适应抽屉
   // QA 运行时
   messages: [],
-  currentSessionTitle: ''
+  currentSessionTitle: '',
+  // 用户反馈汇总：所有气泡的 👍 / 👎 统一写入，评测管理后台【用户反馈汇总】读取同一份数据
+  feedback: [...SEED_FEEDBACK],
+  // 站内通知与内置问卷：运营下发、全员接收；问卷只由消息卡片主动唤起，页面无常驻入口
+  notices: [],
+  // 下发历史（运营后台）：一次下发 = 一条批次记录；含演示答卷与用户实际提交，供【查看结果】聚合
+  noticeHistory: [],
+  // 上下文超时策略（后台管理员可配）：默认 30 分钟无新消息；高危参数高频用户组单独 20 分钟
+  ctxPolicy: { timeoutMin:30, highRiskGroupMin:20, highRiskGroups:[] },
+  // 上下文运行时：只承载 AI 记忆与高危链路统计，不参与任何风控判定；
+  // 会话存档 / 可见聊天记录 / 审计日志一律不写入，清空时也不删除
+  ctxRuntime: {
+    lastMsgTs: 0,
+    warnVisible: false,
+    timedOut: false,
+    summary: '',
+    compressedCount: 0,
+    counters: { highRisk:0, guard:0, composite:0 }
+  },
+  // 分级追问风控运行时：风险等级与链路标识由 classifyRisk() 自动判定，无用户选择状态
+  followRisk: {
+    activeTopic: '',         // 当前活跃高危链路的类别（'' = 无活跃高危链路）
+    activeChain: '',         // 当前活跃链路标识
+    rounds: 0,               // 当前链路连续追问轮次
+    warnVisible: false,      // 第 2 轮柔和前置提醒
+    capped: false,           // 已达 3 轮上限：不再推演参数方案，提供转人工 / 新开对话
+    sessionRisk: false       // 进行中会话是否为高危会话（驱动【风险会话】标签）
+  }
 });
 
 /* ========================= 通用方法 ========================= */
@@ -533,10 +847,37 @@ function addAudit(q, a, risk, guard, doc, ctx){
   store.audit.unshift({ time:now(), q, a, risk, guard:!!guard, doc, ctx });
 }
 
-function clearContext(silent){
-  store.context = { process:'', product:'', defect:'' };
+/* ===== 上下文超时风控（严格按业务规则，不新增判定、不调用模型）=====
+   计时口径：最后一条新消息起算；默认 30 分钟，可配 20 / 30；高危参数高频用户组单独 20 分钟。
+   预警：距超时还剩 2 分钟显示柔和提示；继续发送消息即延续会话时长。
+   清空范围：AI 对话上下文记忆 + 全部高危链路计数器 + 长对话摘要；
+   会话存档 / 可见聊天记录 / 审计日志一律保留，只是 AI 不再记住本次对话内容。 */
+const CTX_WARN_BEFORE_MIN = 2;      // 距离超时还剩 2 分钟（固定规则，不开放配置）
+const CTX_SUMMARY_TRIGGER = 20;     // 长对话阈值（条）：超过即做确定性摘要压缩
+const CTX_SUMMARY_KEEP    = 8;      // 摘要保留的历史提问条数
+function effectiveCtxMin(){
+  const p = store.ctxPolicy;
+  if(store.user && p.highRiskGroups.indexOf(store.user.role)>=0) return p.highRiskGroupMin;
+  return p.timeoutMin;
+}
+function resetCtxCounters(){
+  const c = store.ctxRuntime.counters;
+  c.highRisk=0; c.guard=0; c.composite=0;   // 全部高危链路计数器清零，重新开始识别新问题
+}
+function clearCtxTimers(){ if(ctxTimer)clearTimeout(ctxTimer); if(ctxWarnTimer)clearTimeout(ctxWarnTimer); ctxTimer=null; ctxWarnTimer=null; }
+function resetCtxState(reason){
+  store.context.process=''; store.context.product=''; store.context.defect='';
+  store.lastRisk='低';
+  resetCtxCounters();
+  resetFollowChain();          // 延续既有规则：清空时全部高危链路计数器清零，重新开始识别新问题
+  const rt=store.ctxRuntime;
+  rt.lastMsgTs=0; rt.summary=''; rt.compressedCount=0; rt.warnVisible=false; rt.timedOut=(reason==='timeout');
+  clearCtxTimers();
+}
+function clearContext(silent, reason){
+  resetCtxState(reason||'manual');
   if(!silent){
-    EP.ElMessage({ type:'warning', message:'20 分钟无操作：已自动清空问答上下文（制程/产品/不良缓存），未退出登录、未删除记录。' });
+    EP.ElMessage({ type:'warning', message:'AI 不再保留本次对话上下文，历史记录可前往会话存档查看。' });
   }
 }
 
@@ -546,6 +887,8 @@ function logout(reason){
   store.currentPage = 'qa';
   store.history = [];
   store.messages = [];
+  resetFollowChain();
+  store.followRisk.sessionRisk = false;
   stopTimers();
 }
 
@@ -564,8 +907,10 @@ function createWorkOrder(payload){
     order.tags.push('紧急停线/重大良率事故');
     order.priority='紧急'; order.risk='高';
     order.deadline = deadlineIn(30); order.deadlineTs = Date.now()+30*60000;
-    order.timeline.push({ t:now(), e:'紧急工单穿透：无视日夜，即时推送工程师群 + 主管群，30 分钟超时正常执行' });
-    wecomPush(['工程师群','主管群'], '【紧急工单】'+id, '紧急停线/重大良率事故：'+order.summary+'（已即时推送，30min 未处理将升级）', id);
+    order.timeline.push({ t:now(), e: night
+      ? '夜间紧急穿透：不暂停计时，即时推送工程师群 + 主管群，30 分钟超时正常执行'
+      : '紧急工单穿透：无视日夜，即时推送工程师群 + 主管群，30 分钟超时正常执行' });
+    wecomPush(['工程师群','主管群'], '【紧急工单】'+id, '紧急停线/重大良率事故：'+order.summary+'（已即时推送，夜间不暂停计时，30min 未处理将升级）', id);
   } else if(night){
     order.tags.push('夜间上报');
     order.deadline='—（夜间暂停）'; order.deadlineTs=null;
@@ -610,22 +955,36 @@ function orderCountdown(o, nowTs){
   return { text:(m>0? m+'分':'')+s+'秒', cls: diff < 10*60000 ? 'urgent' : '' };
 }
 
+/* 工单口径判定（两类分开，避免相互误伤）：
+   - isUrgentOrder：紧急工单（标签含「紧急」或 priority=紧急）→ 夜间计时穿透，不暂停
+   - isUrgentStop ：标记「紧急停线」的工单 → 处理角色改为「待主管同步盯控」
+   复合疑难属前者但不属后者：不触发穿透告警、也不改盯控角色。 */
+function isUrgentOrder(o){ return (o.tags && o.tags.some(t=>t.indexOf('紧急')>=0)) || o.priority==='紧急'; }
+function isUrgentStop(o){ return !!(o.tags && o.tags.some(t=>t.indexOf('紧急停线')>=0)); }
+// 紧急停线工单由主管同步盯控；详情可带出实际承接人，避免覆盖后信息丢失
+function handlerRole(o, verbose){
+  if(!isUrgentStop(o)) return o.handler || '待分配';
+  return '待主管同步盯控' + (verbose && o.handler ? '（实际承接：'+o.handler+'）' : '');
+}
 // 超时展示规则：状态标签 + 计时辅助文本（沿用定稿日夜逻辑）
 function fmtTs(ts){ if(ts==null) return '—'; return new Date(ts).toLocaleString('zh-CN',{hour12:false}); }
 function timeoutDisplay(o, nowTs){
-  const isUrgent = o.tags.some(t=>t.indexOf('紧急')>=0) || o.priority==='紧急';
+  const isUrgent = isUrgentOrder(o);
   const isNight  = o.tags.indexOf('夜间上报')>=0;
   if(o.status==='closed') return { tagType:'success', tagText:'已闭环', aux:'', blink:false };
   // 复合疑难：AI 识别的紧急工单，不触发穿透升级告警（不显示升级倒计时、不闪烁）
   if(o.tags.indexOf('复合疑难')>=0) return { tagType:'warning', tagText:'复合疑难｜主管介入', aux:'AI 识别 · 不触发穿透升级告警', blink:false };
-  if(isNight) return { tagType:'info', tagText:'夜间上报｜暂停计时', aux:'次日 08:10 恢复计时', blink:false };
+  // 紧急工单穿透夜间策略：不暂停计时，继续走 30 分钟倒计时
+  if(isNight && !isUrgent) return { tagType:'info', tagText:'夜间上报｜暂停计时', aux:'次日 08:10 恢复计时', blink:false };
   const ts = (o.deadlineTs!=null) ? o.deadlineTs : parseDeadline(o.deadline);
-  if(ts==null) return { tagType:'info', tagText:'暂停计时', aux:'', blink:false };
+  // 紧急工单即使未初始化截止时间，也不得显示「暂停计时」
+  if(ts==null) return isUrgent ? { tagType:'danger', tagText:'⚠️ 紧急停线｜计时待初始化', aux:'', blink:false }
+                              : { tagType:'info', tagText:'暂停计时', aux:'', blink:false };
   const diff = ts - nowTs;
   if(diff<=0) return { tagType:'danger', tagText:'已超时，已升级主管', aux:'', blink:false };
   const m=Math.floor(diff/60000), s=Math.floor((diff%60000)/1000);
   const timeStr = '剩余 '+(m>0?m+'分':'')+s+'秒升级';
-  if(isUrgent) return { tagType:'danger', tagText:'⚠️ 紧急停线', aux:timeStr, blink: diff<10*60000 };
+  if(isUrgent) return { tagType:'danger', tagText: isNight ? '⚠️ 紧急停线｜夜间不暂停' : '⚠️ 紧急停线', aux:timeStr, blink: diff<10*60000 };
   if(diff < 10*60000) return { tagType:'danger', tagText:'即将超时！', aux:timeStr, blink:true };
   return { tagType:'warning', tagText:'处理中计时', aux:timeStr, blink:false };
 }
@@ -637,19 +996,99 @@ function getSessionMessages(id){
 }
 
 /* ========================= 超时计时器 ========================= */
-let t20=null, t60=null, idleReset=null;
-function resetIdle(){
+let t60=null, idleReset=null, ctxTimer=null, ctxWarnTimer=null;
+function resetIdle(){          // 登录超时：沿用既有 60 分钟全局闲置口径，不改规则
   if(!store.user) return;
-  if(t20) clearTimeout(t20);
   if(t60) clearTimeout(t60);
-  t20 = setTimeout(()=>{ clearContext(false); }, 20*60*1000);   // 20min 清空上下文
-  t60 = setTimeout(()=>{ logout('60 分钟无操作：已强制登出'); }, 60*60*1000); // 60min 强制登出
+  t60 = setTimeout(()=>{ logout('60 分钟无操作：已强制登出'); }, 60*60*1000);
 }
-function stopTimers(){ if(t20)clearTimeout(t20); if(t60)clearTimeout(t60); if(idleReset)clearInterval(idleReset); }
+function stopTimers(){ if(t60)clearTimeout(t60); if(idleReset)clearInterval(idleReset); clearCtxTimers(); }
 function bindIdle(){
   ['click','keydown','mousemove','scroll','touchstart'].forEach(ev=>{
     window.addEventListener(ev, resetIdle, { passive:true });
   });
+}
+// 上下文计时：只在「有新消息」时重置，鼠标移动 / 点击等闲置操作不延续会话时长
+function armCtxTimer(){
+  clearCtxTimers();
+  if(!store.user || !store.messages.length || !store.ctxRuntime.lastMsgTs) return;
+  const min = effectiveCtxMin();
+  store.ctxRuntime.warnVisible = false;
+  ctxWarnTimer = setTimeout(()=>{ if(store.messages.length) store.ctxRuntime.warnVisible = true; },
+    Math.max(0, (min - CTX_WARN_BEFORE_MIN)*60*1000));
+  ctxTimer = setTimeout(()=>{ clearContext(false, 'timeout'); }, min*60*1000);
+}
+function bumpCtxActivity(){
+  store.ctxRuntime.lastMsgTs = Date.now();
+  store.ctxRuntime.timedOut = false;
+  armCtxTimer();
+}
+// 长对话摘要压缩：确定性文本收敛，不调用模型；不删除任何可见消息与存档记录
+function maybeCompress(){
+  const msgs = store.messages;
+  if(msgs.length <= CTX_SUMMARY_TRIGGER) return;
+  const early = msgs.slice(0, msgs.length - CTX_SUMMARY_TRIGGER);
+  const picks = early.filter(m=>m.r==='user' && m.t).slice(-CTX_SUMMARY_KEEP).map(m=>String(m.t).slice(0,24));
+  store.ctxRuntime.summary = picks.join('；');
+  store.ctxRuntime.compressedCount = early.length;
+}
+// 高危链路计数：仅统计命中，不参与任何风控判定
+function countHighRisk(m){
+  if(!m || m.r!=='bot') return;
+  const c = store.ctxRuntime.counters;
+  if(m.risk==='高') c.highRisk++;
+  if(m.guard) c.guard++;
+  if(/复合|耦合/.test(m.t||'')) c.composite++;
+}
+function onNewMessage(m){
+  countHighRisk(m);
+  maybeCompress();
+  bumpCtxActivity();
+}
+
+/* ========================= 分级追问风控（严格按业务规则）=========================
+   1) 仅 HIGH_RISK_TOPICS 五类高危调参场景启用单链路最多 3 轮连续追问；低风险咨询不计数、不限制。
+   2) 语义链路由 classifyRisk() 自动判定的 topic + chain 驱动：相同链路标识 = 延续同一诉求（累加轮次），
+      不同链路标识 = 新的高危问题（开启全新独立链路，从第 1 轮重新计数）。
+   3) 中途切入低风险话题 → 当前高危链路终止、计数器冻结清零。
+   4) 第 2 轮结束 → 柔和前置提醒；第 3 轮上限 → 不再推演参数方案，给转人工 / 新开对话按钮。
+   注：sessionRisk 是「会话级」标记，仅新开对话 / 切换案例 / 登出时重置；链路终止不影响会话标记。 */
+function isHighRiskTopic(t){ return HIGH_RISK_TOPICS.indexOf(t) >= 0; }
+
+// 链路终止：计数器冻结清零（轮次不保留、限制不延续）
+function resetFollowChain(){
+  const f = store.followRisk;
+  f.activeTopic=''; f.activeChain=''; f.rounds=0;
+  f.warnVisible=false; f.capped=false;
+}
+// 开启全新独立计数链路
+function startFollowChain(topic, key){
+  const f = store.followRisk;
+  f.activeTopic=topic; f.activeChain=key; f.rounds=1;
+  f.warnVisible=false; f.capped=false;
+  f.sessionRisk=true;
+}
+/* 每条「用户追问」按语义判定结果驱动状态机；返回 'low' | 'count' | 'warn' | 'capped' | 'capped_again' */
+function applyFollowRisk(topic, chain){
+  const f = store.followRisk;
+  if(!isHighRiskTopic(topic)){      // 低风险咨询：终止当前高危链路、计数器冻结清零
+    resetFollowChain();
+    return 'low';
+  }
+  const key = topic + '|' + (chain || topic);
+  if(f.capped && f.activeChain===key) return 'capped_again';   // 同链路已达上限：不推演、不再累加
+  if(f.activeChain!==key){          // 新的高危诉求 → 全新独立链路，从第 1 轮重新计数
+    startFollowChain(topic, key);
+  }else{
+    f.rounds++;                     // 延续同一诉求 → 累加轮次
+  }
+  if(f.rounds >= FOLLOW_LIMIT){
+    f.rounds=FOLLOW_LIMIT; f.warnVisible=false; f.capped=true; return 'capped';
+  }
+  if(f.rounds === FOLLOW_WARN_AT){
+    f.warnVisible=true; f.capped=false; return 'warn';
+  }
+  f.warnVisible=false; f.capped=false; return 'count';
 }
 
 /* ========================= 页面组件 ========================= */
@@ -682,6 +1121,10 @@ const LoginPage = {
           <div style="font-weight:700;">工艺主管 / QA <span class="wb-demo-tag">超级管理</span></div>
           <div class="wb-mini" style="margin-top:6px;">全部页面与功能 · 管理评测集/规则引擎/护栏 · 完整工单池抢单转办</div>
         </div>
+        <div class="role-card" :class="{active:sel==='admin'}" @click="sel='admin'" style="margin-top:12px;">
+          <div style="font-weight:700;">运营 <span class="wb-demo-tag">通知 / 问卷</span></div>
+          <div class="wb-mini" style="margin-top:6px;">仅站内通知下发与问卷配置推送 · 可见对话测试页 / 问卷设置页 · 无工单处理 / 文档管理 / 检索策略 / 护栏配置权限</div>
+        </div>
         <el-button type="primary" size="large" style="width:100%;margin-top:22px;" @click="doLogin">进入系统</el-button>
         <div class="wb-tip" style="margin-top:14px;">演示提示：纯前端模拟，无需后端；切换角色即切换全部权限与可见页面。</div>
       </div>
@@ -690,12 +1133,18 @@ const LoginPage = {
   setup(){
     const sel = ref('engineer');
     function doLogin(){
-      const map = { team_lead:'班组长', engineer:'李工程师', supervisor:'王主管' };
+      const map = { team_lead:'班组长', engineer:'李工程师', supervisor:'王主管', admin:'运营' };
       store.user = { role: sel.value, name: map[sel.value], roleLabel: ROLES[sel.value].label };
       store.currentPage = 'qa';
       store.history = [];   // 新会话：清空历史栈，返回按钮从首页起算
       resetIdle(); bindIdle();
       EP.ElMessage({ type:'success', message:'已以「'+ROLES[sel.value].label+'」身份登录，权限体系已挂载' });
+      // 仅在第一次收到该通知时给一条轻量登录提示；绝不自动弹出问卷
+      const fresh = store.notices.filter(n=> !n.hintShown && n.status!=='done');
+      if(fresh.length){
+        fresh.forEach(n=> n.hintShown=true);
+        EP.ElMessage({ type:'info', message:'您有 '+fresh.length+' 条新通知，请点击右上角铃铛查看', duration:4000 });
+      }
     }
     return { sel, doLogin, ROLES };
   }
@@ -799,6 +1248,156 @@ const SourceRefs = {
   </div>`
 };
 
+/* ========================= 点赞踩统一反馈 · 归类 / 记录 / 组件 =========================
+   归类是确定性规则（显式术语 + 消息字段），不是模型推理，也不暴露给用户选择。 */
+function isRiskNotice(m){
+  if(m.guard) return true;
+  const t=String(m.t||'');
+  return /护栏拦截|高风险参数|风险提示|三轮|3轮|连续推演|禁止输出|停线复核|升级主管|不强行推理|已自动触发人工工单|最多支持/.test(t);
+}
+function isClarify(m){
+  const t=String(m.t||'');
+  return /请补充|请确认|为精准定位|请提供|请描述/.test(t)
+      && !/建议查阅|检测到|D-[A-Z]+-\d+|上限|ECN|护栏/.test(t);
+}
+function feedbackKind(m){
+  if(!m) return '';
+  if(m.fbKind) return m.fbKind;                 // 三轮上限拦截提示条：显式归为风控通知
+  if(m.r==='nomatch') return 'zerohit';
+  if(m.r!=='bot') return '';                    // system 为系统提示，非 AI 输出气泡
+  if(isRiskNotice(m)) return 'risk';
+  if(isClarify(m)) return 'clarify';
+  return 'formal';                              // 其余 AI 回答归为正式工艺回答（含检索结论）
+}
+/* 命中 Chunk：取相关性最高的溯源片段，与本条会话 / 风险标签一并写入汇总记录 */
+function fbChunk(m){
+  if(feedbackKind(m)!=='formal') return '—';
+  const list = sourcesFor(m);
+  if(!list.length) return '—（未命中 Chunk）';
+  const s = list[0];
+  return s.docId + '｜' + (DOC_SNIPPETS[s.docId] || s.snippet || '');
+}
+function fbEnsureId(m){
+  if(!m.fbId) m.fbId = 'FB-'+Math.random().toString(36).slice(2,10);
+  return m.fbId;
+}
+/* 一条消息只保留一条汇总记录；重复点击更新同一条，不产生重复反馈 */
+function fbRecord(m, vote, question, session){
+  const fbId = fbEnsureId(m), kind = feedbackKind(m);
+  let rec = store.feedback.find(x=>x.fbId===fbId);
+  if(!rec){
+    rec = { id:'F-'+Date.now().toString(36).toUpperCase().slice(-5), fbId };
+    store.feedback.unshift(rec);
+  }
+  const prevReason = rec.reason;
+  Object.assign(rec, {
+    time: now(), session: session || store.currentSessionTitle || '当前会话（进行中）',
+    question: question || '—', kind, kindLabel: FB_KIND_LABEL[kind] || '—',
+    excerpt: String(m.t||m.q||'').slice(0,42),
+    chunk: fbChunk(m), risk: m.risk || '—',
+    vote, voteLabel: vote==='up' ? (kind==='formal'?'回答认可':'认可') : '不认可',
+    demo:false
+  });
+  rec.reason = vote==='up' ? '' : (kind==='formal' ? (prevReason && prevReason!=='未填写' ? prevReason : '未填写') : '');
+  if(vote==='up') rec.comment='';
+  // 定稿标签：按「消息类型 × 反馈方向」确定性打标；formal 点踩的标签由二级面板所选原因补充
+  const voteTag = (FB_VOTE_TAG[kind] || {})[vote] || '';
+  rec.tags = voteTag ? [voteTag] : [];
+  if(kind==='formal' && vote==='down' && rec.reason && rec.reason!=='未填写'
+     && rec.tags.indexOf(rec.reason)<0) rec.tags.push(rec.reason);
+  return rec;
+}
+function fbUpdateReason(rec, reason, comment){
+  rec.reason = reason || '未填写';
+  rec.comment = String(comment||'').trim();
+  rec.voteLabel = '不认可';
+  rec.tags = rec.tags.filter(t=>t!=='回答认可');
+  if(rec.reason!=='未填写' && rec.tags.indexOf(rec.reason)<0) rec.tags.push(rec.reason);
+  rec.time = now();
+}
+
+/* 每条 AI 输出气泡右下角一组 👍 / 👎；一级点击与二级面板状态各自独立 */
+const MsgFeedback = {
+  props:{
+    msg:{ type:Object, required:true },
+    question:{ type:String, default:'—' },
+    session:{ type:String, default:'' }
+  },
+  setup(props){
+    const kind = computed(()=> feedbackKind(props.msg));
+    const kindLabel = computed(()=> FB_KIND_LABEL[kind.value] || '—');
+    const strong = computed(()=> kind.value==='formal');
+    const panel = ref(false);
+    const panelEl = ref(null);
+    const reason = ref('');
+    const comment = ref('');
+    function revealPanel(){
+      // 面板内联在滚动消息区内：打开后滚到消息区底部，保证关闭按钮 / 选项完整可见，
+      // 且始终位于底部对话输入框之上，不遮挡输入框。
+      nextTick(()=>{
+        const el = panelEl.value, chat = el && el.closest('.wb-chat');
+        if(chat) chat.scrollTop = chat.scrollHeight;
+      });
+    }
+    const voted = computed(()=>{
+      const r = store.feedback.find(x=>x.fbId===props.msg.fbId);
+      return r ? r.vote : '';
+    });
+    const approved = computed(()=> strong.value && voted.value==='up');
+    // 弱化图标点击后的「已记录」提示：只做悬浮 / 读屏状态反馈，不弹面板、不改气泡文案
+    const recordTag = computed(()=>{
+      const r = store.feedback.find(x=>x.fbId===props.msg.fbId);
+      return r && r.tags && r.tags.length ? r.tags.join('、') : '';
+    });
+    function vote(v){
+      const r = fbRecord(props.msg, v, props.question, props.session);
+      if(v==='down' && strong.value){
+        reason.value = r.reason && r.reason!=='未填写' ? r.reason : '';
+        comment.value = r.comment || '';
+        panel.value = true;                    // 仅第 1 类正式回答点踩才出现二级面板
+        revealPanel();
+      }else{
+        panel.value = false;                  // 其余场景一律静默记录
+      }
+    }
+    function closePanel(){ panel.value=false; }
+    function submitPanel(){
+      const r = store.feedback.find(x=>x.fbId===props.msg.fbId);
+      if(r) fbUpdateReason(r, reason.value, comment.value);
+      panel.value=false;
+    }
+    return { kind, kindLabel, strong, panel, panelEl, reason, comment, voted, approved, recordTag,
+             FB_REASONS, vote, closePanel, submitPanel };
+  },
+  template:`
+  <div class="wb-fb" :class="{'is-weak':!strong}" :title="kindLabel">
+    <div class="wb-fb-row">
+      <span v-if="approved" class="wb-fb-tag">回答认可</span>
+      <button type="button" class="wb-fb-btn" :class="{up:voted==='up'}"
+        :aria-label="'认可（'+kindLabel+'）'" :aria-pressed="voted==='up'?'true':'false'"
+        :title="voted==='up' && recordTag ? '已记录：'+recordTag : '认可（'+kindLabel+'）'" @click="vote('up')">👍</button>
+      <button type="button" class="wb-fb-btn" :class="{down:voted==='down'}"
+        :aria-label="'不认可（'+kindLabel+'）'" :aria-pressed="voted==='down'?'true':'false'"
+        :title="voted==='down' && recordTag ? '已记录：'+recordTag : '不认可（'+kindLabel+'）'" @click="vote('down')">👎</button>
+    </div>
+    <div v-if="panel" ref="panelEl" class="wb-fb-panel" role="group" aria-label="反馈原因二级面板">
+      <div class="wb-fb-panel-head">
+        <span>反馈原因（单选）</span>
+        <button type="button" class="wb-fb-close" aria-label="关闭反馈面板" @click="closePanel">×</button>
+      </div>
+      <el-radio-group v-model="reason" class="wb-fb-reasons">
+        <el-radio v-for="o in FB_REASONS" :key="o" :label="o">{{o}}</el-radio>
+      </el-radio-group>
+      <el-input v-if="reason==='其他'" v-model="comment" type="textarea" :rows="2" placeholder="补充说明（选填）" />
+      <div class="wb-fb-panel-foot">
+        <span class="wb-mini">绑定本条会话 · 命中 Chunk · 风险标签；可不填直接关闭</span>
+        <el-button size="small" @click="closePanel">关闭</el-button>
+        <el-button size="small" type="primary" @click="submitPanel">提交反馈</el-button>
+      </div>
+    </div>
+  </div>`
+};
+
 /* ========================= 无可信检索来源 · 兜底判定 ========================= */
 /* 前端模拟检索：提问带明确查询意图、但不含任何工艺实体词 → 判定知识库零命中。
    命中实体词或属模糊陈述时，仍交回既有 generateReply / 递进追问流程，原逻辑不改。 */
@@ -823,7 +1422,7 @@ const QaPage = {
           <span class="wb-demo-tag">上下文记忆继承</span>
         </div>
         <div style="display:flex;gap:8px;">
-          <el-button size="small" @click="simCtxTimeout">模拟上下文超时(20min)</el-button>
+          <el-button size="small" @click="simCtxTimeout">模拟上下文超时 30 分钟</el-button>
           <el-button size="small" type="danger" plain @click="simLoginTimeout">模拟登录超时(60min)</el-button>
         </div>
       </div>
@@ -840,18 +1439,14 @@ const QaPage = {
       <div class="wb-card wb-chat-card">
         <!-- 上下文状态栏 -->
         <div class="wb-ctx-bar">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-weight:700;font-size:13px;">上下文状态栏</span>
-            <el-button size="small" text type="primary" :disabled="!hasCtx" @click="clearCtx">手动清空</el-button>
-          </div>
-          <div style="margin-top:8px;">
-            <span v-if="!hasCtx" class="wb-mini">暂无上下文，请在对话中补全制程 / 产品 / 不良现象。</span>
-            <template v-else>
-              <span class="wb-context-chip">制程 <b>{{store.context.process||'—'}}</b></span>
-              <span class="wb-context-chip">产品 <b>{{store.context.product||'—'}}</b></span>
-              <span class="wb-context-chip">不良 <b>{{store.context.defect||'—'}}</b></span>
-            </template>
-          </div>
+          <span class="wb-ctx-title">上下文状态栏</span>
+          <span v-if="!hasCtx" class="wb-ctx-empty wb-mini">暂无上下文 · 载入演示案例，或在下方输入含制程 / 产品 / 不良现象的问题即自动补全。</span>
+          <template v-else>
+            <span class="wb-context-chip">制程 <b>{{store.context.process||'—'}}</b></span>
+            <span class="wb-context-chip">产品 <b>{{store.context.product||'—'}}</b></span>
+            <span class="wb-context-chip">不良 <b>{{store.context.defect||'—'}}</b></span>
+          </template>
+          <el-button size="small" class="wb-ctx-clear" @click="askClearCtx">清空上下文</el-button>
         </div>
 
         <div class="wb-chat" ref="chat">
@@ -864,6 +1459,7 @@ const QaPage = {
                 <el-button size="small" type="primary" plain @click="openHelpFromNoMatch(m.q)">转人工咨询</el-button>
                 <el-button size="small" @click="reAsk">重新提问</el-button>
               </div>
+              <msg-feedback :msg="m" :question="questionAt(i)" />
             </div>
             <div v-else class="wb-bubble" :class="m.r">
               <div>{{mask(m.t)}}</div>
@@ -878,33 +1474,55 @@ const QaPage = {
                 ⚠ 护栏拦截：数值已隐藏，禁止输出放行值，需 ECN 复核
               </div>
               <source-refs v-if="m.r==='bot'" :msg="m" />
+              <msg-feedback v-if="m.r==='bot'" :msg="m" :question="questionAt(i)" />
             </div>
           </div>
+          <div v-if="store.ctxRuntime.warnVisible" class="wb-ctx-warn">【温馨提醒】会话即将超时，超时后 AI 将不再保留本次对话上下文，历史记录可前往会话存档查看。继续发送消息即可延续会话时长。</div>
+          <div v-if="store.followRisk.warnVisible || store.followRisk.capped" class="wb-follow-warn">
+            <div>【温馨提示】当前为工艺参数咨询，最多支持3轮连续推演，如需继续调整方案，后续建议转人工工单复核。</div>
+            <div v-if="store.followRisk.capped" class="wb-follow-actions">
+              <el-button size="small" class="wb-btn-warn" @click="openFollowOrder">发起工单转人工</el-button>
+              <el-button size="small" @click="startNewChat">新开对话</el-button>
+            </div>
+            <msg-feedback :msg="capNotice" :question="lastQuestion()" />
+          </div>
           <div v-if="!store.messages.length" class="wb-tip" style="margin-top:30px;text-align:center;">
-            点击左侧「演示案例库」快速体验面试脚本，或在下方直接提问。
+            点击「演示案例库」快速体验，或在下方直接提问。
           </div>
         </div>
 
         <div class="wb-composer">
           <el-input v-model="input" placeholder="输入工艺问题（如：P55 Array 曝光能量为什么超标）" @keyup.enter="send" />
           <el-button type="primary" @click="send">发送</el-button>
-        </div>
-        <div class="wb-composer-actions">
-          <el-button size="small" @click="archiveSession">存档本次会话</el-button>
-          <el-button size="small" type="warning" @click="openHelp">提交人工求助工单</el-button>
+          <el-button type="warning" title="反馈备选通道：若未留意气泡右下角的 👍/👎，也可在此提交人工求助" @click="openHelp">提交人工求助工单</el-button>
+          <el-button class="wb-btn-last" @click="archiveSession">存档本次会话</el-button>
         </div>
       </div>
 
-      <!-- 侧边演示案例库 -->
-      <div class="wb-card wb-case-card">
-        <div class="wb-section-title">演示案例库（4 套预制脚本）
-          <el-button size="small" :disabled="!streaming" @click="skipStream" style="margin-left:auto;">跳过流式输出</el-button>
+      <!-- 侧边会话列表 + 演示案例库 -->
+      <div class="wb-side-col">
+        <div class="wb-card wb-sess-card">
+          <div class="wb-section-title">会话列表</div>
+          <div class="wb-sess-list">
+            <div v-for="s in sessionList" :key="s.id" class="wb-sess-item" :class="{'is-active':s.active}">
+              <div class="wb-sess-head">
+                <span class="wb-sess-title" :title="s.title">{{s.title}}</span>
+                <span v-if="s.active && s.highRisk" class="wb-risk-tag">风险会话</span>
+              </div>
+              <div class="wb-sess-meta">{{s.meta}}</div>
+            </div>
+          </div>
         </div>
-        <div v-for="c in cases" :key="c.id" class="role-card" style="margin-bottom:10px;padding:12px;" @click="playCase(c.id)">
-          <div style="font-weight:700;font-size:13px;">{{c.name}}</div>
-          <div class="wb-mini" style="margin-top:4px;">{{c.desc}}</div>
+        <div class="wb-card wb-case-card">
+          <div class="wb-section-title">演示案例库（4 套）
+            <el-button size="small" :disabled="!streaming" @click="skipStream" style="margin-left:auto;">跳过流式输出</el-button>
+          </div>
+          <div v-for="c in cases" :key="c.id" class="role-card wb-case-item" :title="c.desc" @click="playCase(c.id)">
+            <div class="wb-case-name">{{c.name}}</div>
+            <div class="wb-mini wb-case-desc" :title="c.desc">{{c.desc}}</div>
+          </div>
+          <div class="wb-tip wb-case-tip" style="margin-top:8px;">点击即载入预制脚本，含追问 / 标红 / 护栏 / 复合异常转单 / 零命中兜底全流程；案例4 的气泡内可直接体验转人工与重新提问；播放较慢，可点「跳过流式输出」。</div>
         </div>
-        <div class="wb-tip" style="margin-top:8px;">点击即载入预制脚本，含追问 / 标红 / 护栏 / 复合异常转单 / 零命中兜底全流程；案例4 的气泡内可直接体验转人工与重新提问。</div>
       </div>
     </div>
 
@@ -938,6 +1556,19 @@ const QaPage = {
       { id:3, name:CASE_SCRIPTS[3].name, desc:'多轮累积 → 复合异常 → 自动工单 + 企微推送' },
       { id:4, name:CASE_SCRIPTS[4].name, desc:'知识库零命中 → 不推测 / 不溯源；浅黄气泡内可「转人工咨询」（带入提问 + 未命中标签）或「重新提问」' }
     ];
+    // 侧边会话列表：仅「进行中的高危会话」显示【风险会话】标签；低风险 / 已存档会话无标签
+    const sessionList = computed(()=>{
+      const f = store.followRisk;
+      let meta = '进行中 · 低风险咨询';
+      if(f.activeTopic) meta = '进行中 · '+f.activeTopic+' · 第 '+f.rounds+'/'+FOLLOW_LIMIT+' 轮';
+      else if(f.sessionRisk) meta = '进行中 · 无活跃高危链路';
+      const cur = { id:'CUR', title: store.currentSessionTitle || '当前会话（进行中）',
+                    active:true, highRisk:f.sessionRisk, meta };
+      // 侧栏仅列最近 2 条已存档会话，避免把下方演示案例库挤出视口；完整列表仍在「会话存档」页
+      const hist = store.sessions.slice(0, 2).map(s=>({ id:s.id, title:s.title, active:false, highRisk:false,
+                    meta:s.status+' · '+s.time }));
+      return [cur, ...hist];
+    });
     const hasCtx = computed(()=> store.context.process||store.context.product||store.context.defect );
     const riskColor = computed(()=> store.lastRisk==='高'?'var(--wb-red)':store.lastRisk==='中'?'var(--wb-yellow)':'var(--wb-green)' );
     const riskText = computed(()=> store.lastRisk==='高'?'红色 · 高风险':store.lastRisk==='中'?'黄色 · 中风险':'绿色 · 低风险' );
@@ -954,19 +1585,39 @@ const QaPage = {
     function scroll(){ nextTick(()=>{ if(chat.value) chat.value.scrollTop = chat.value.scrollHeight; }); }
 
     function setRisk(r){ store.lastRisk = r||'低'; }
+    // 反馈绑定：取该条 AI 消息之前最近一条用户提问；三轮上限提示条取当前会话最后一条提问
+    function questionAt(i){
+      for(let j=i-1;j>=0;j--){ const m=store.messages[j]; if(m && m.r==='user') return m.t; }
+      return '—';
+    }
+    function lastQuestion(){
+      for(let j=store.messages.length-1;j>=0;j--){ const m=store.messages[j]; if(m && m.r==='user') return m.t; }
+      return '—';
+    }
 
     function send(){
       const text = input.value.trim(); if(!text) return;
       store.messages.push({ r:'user', t:text });
       input.value='';
+      // 分级追问风控：用户只需直接输入问题，风险等级与语义链路由后台规则自动判定
+      const risk = classifyRisk(text);
+      const state = applyFollowRisk(risk.topic, risk.chain);
       // 兜底：知识库零命中 —— 不生成任何推测性回答，只给提示 + 转人工 / 重新提问
       if(isNoMatchQuery(text)){
         store.messages.push({ r:'nomatch', q:text });
+        bumpCtxActivity();   // 继续发送消息即可延续会话时长
+        scroll();
+        return;
+      }
+      // 到达 3 轮上限：不再继续推演参数方案；会话不截断，提示条与两个按钮常驻最新消息下方
+      if(state==='capped' || state==='capped_again'){
+        bumpCtxActivity();
         scroll();
         return;
       }
       const reply = generateReply(text);
       store.messages.push(reply);
+      onNewMessage(reply);
       addAudit(text, reply.t, reply.risk, reply.guard, reply.doc||'—', ctxStr());
       setRisk(reply.risk);
       scroll();
@@ -1014,29 +1665,54 @@ const QaPage = {
 
     function ctxStr(){ return [store.context.process,store.context.product,store.context.defect].filter(Boolean).join(' / ')||'—'; }
 
-    function clearCtx(){ clearContext(true); store.messages.push({ r:'system', t:'上下文已手动清空（制程/产品/不良缓存）。' }); }
+    function askClearCtx(){
+      EP.ElMessageBox.confirm(
+        '确认清空本次对话上下文？清空后 AI 不会再基于前面内容回答，聊天记录仍然保留。',
+        '清空上下文',
+        { confirmButtonText:'清空', cancelButtonText:'取消', type:'warning' }
+      ).then(()=>{ clearCtx(); }).catch(()=>{});
+    }
+    function clearCtx(){ clearContext(true, 'manual'); store.messages.push({ r:'system', t:'上下文已手动清空（制程/产品/不良缓存）。' }); }
 
     function stopStream(){ if(streamTimer){ clearTimeout(streamTimer); streamTimer=null; } }
     function emitAutoOrder(c){
       const o = createWorkOrder({ source:'系统复合异常', reporter:'RAG系统', reporterRole:'系统', summary:'CF M32 烤箱温度+膜厚+色偏耦合漂移', risk:'高', priority:'紧急' });
       wecomPush(['工程师群','主管群'],'【复合异常工单】'+o.id,'系统识别复合耦合异常，已直推主管介入池，双向并行处理。', o.id);
     }
+    // 预制脚本里 AI 确认「已记录/已补全上下文」的气泡携带 setCtx：
+    // 流式推送与跳过流式两条路径都同步写回 store.context，保证状态栏与对话文案一致。
+    // 案例4（零命中兜底）不带 setCtx，刻意保持无上下文，符合「不推测、不溯源」语义。
+    function applyCaseCtx(m){
+      const c = m && m.setCtx; if(!c) return;
+      if(c.process!==undefined) store.context.process = c.process;
+      if(c.product!==undefined) store.context.product = c.product;
+      if(c.defect!==undefined)  store.context.defect  = c.defect;
+    }
+    // 流式推送与跳过流式共用同一条消息出口：上下文回写、链路计数、统计必须一致
+    // 注：预制演示脚本若自带 topic/chain，仅作脚本编排数据，不暴露为 UI 控件；
+    //     用户手动输入一律走 send() → classifyRisk() 自动判定，无需任何选择。
+    function emitScriptMessage(m){
+      applyCaseCtx(m);
+      store.messages.push(m);
+      if(m.r==='user' && m.topic) applyFollowRisk(m.topic, m.chain);
+      onNewMessage(m);
+      if(m.r==='bot' && m.risk) setRisk(m.risk);
+      if(m.r==='system' && streamCase.c.autoOrder && !streamCase.done){ streamCase.done=true; emitAutoOrder(streamCase.c); }
+    }
     function pushNext(){
       if(!streamCase) return;
       if(streamCase.idx >= streamCase.c.msgs.length){ streaming.value=false; streamCase=null; streamTimer=null; return; }
-      const m = { ...streamCase.c.msgs[streamCase.idx] };
-      store.messages.push(m);
-      if(m.r==='bot' && m.risk) setRisk(m.risk);
-      if(m.r==='system' && streamCase.c.autoOrder && !streamCase.done){ streamCase.done=true; emitAutoOrder(streamCase.c); }
+      emitScriptMessage({ ...streamCase.c.msgs[streamCase.idx] });
       scroll();
       streamCase.idx++;
-      streamTimer = setTimeout(pushNext, 850);
+      streamTimer = setTimeout(pushNext, streamCase.c.interval || CASE_PLAY_INTERVAL_MS);   // 支持案例级播放间隔覆盖
     }
     function playCase(id){
       stopStream();
       const c = CASE_SCRIPTS[id];
       streamCase = { c, idx:0, done:false };
-      store.messages = []; store.context={process:'',product:'',defect:''}; setRisk('低');
+      store.messages = []; clearContext(true); setRisk('低');
+      store.followRisk.sessionRisk = false;   // 切换案例 = 开启新会话
       streaming.value = true;
       pushNext();
       EP.ElMessage({ type:'info', message:'正在流式载入：'+c.name+'（可点「跳过流式输出」一次性加载）' });
@@ -1045,10 +1721,7 @@ const QaPage = {
       if(!streamCase) return;
       stopStream();
       while(streamCase.idx < streamCase.c.msgs.length){
-        const m = { ...streamCase.c.msgs[streamCase.idx] };
-        store.messages.push(m);
-        if(m.r==='bot' && m.risk) setRisk(m.risk);
-        if(m.r==='system' && streamCase.c.autoOrder && !streamCase.done){ streamCase.done=true; emitAutoOrder(streamCase.c); }
+        emitScriptMessage({ ...streamCase.c.msgs[streamCase.idx] });
         streamCase.idx++;
       }
       streaming.value=false; streamCase=null;
@@ -1059,11 +1732,25 @@ const QaPage = {
       if(!store.messages.length){ EP.ElMessage.warning('当前没有可存档的会话'); return; }
       const id = 'S-'+Math.floor(Math.random()*9000+1000);
       const title = store.currentSessionTitle || ('会话 '+id);
-      store.sessions.unshift({ id, title, time:now(), risk:store.lastRisk, status:'已存档', orderTag:'' });
+      store.sessions.unshift({ id, title, time:now(), risk:store.lastRisk, status:'已存档', orderTag:'',
+        messages: store.messages.map(m=>({...m})) });   // 存档时保存逐条聊天记录快照，供【详情】查看
       EP.ElMessage.success('会话已存档：'+id);
     }
 
     function openHelp(){ help.noMatch=false; helpVisible.value=true; }
+    // 分级追问风控上限按钮：沿用既有「提交人工求助工单」弹窗，不新增流程
+    function openFollowOrder(){ openHelp(); }
+    // 【新开对话】：开启全新会话，链路计数器与【风险会话】标记一并清除
+    function startNewChat(){
+      stopStream();
+      store.messages = [];
+      clearContext(true);                     // 连带全部高危链路计数器清零
+      store.followRisk.sessionRisk = false;  // 新会话：不再标记为风险会话
+      store.currentSessionTitle = '';
+      setRisk('低');
+      EP.ElMessage({ type:'info', message:'已新开对话' });
+      scroll();
+    }
     // 兜底气泡「转人工咨询」：带入原始提问，标记提交时打「知识库未命中」标签
     function openHelpFromNoMatch(q){
       help.summary = q || '';
@@ -1092,10 +1779,10 @@ const QaPage = {
       EP.ElMessage.success('工单已提交：'+o.id+(o.tags.includes('夜间上报')?'（已打夜间上报）':''));
     }
 
-    function simCtxTimeout(){ clearContext(false); }
+    function simCtxTimeout(){ clearContext(false, 'timeout'); }
     function simLoginTimeout(){ logout('模拟登录超时：60 分钟无操作已强制登出'); }
 
-    return { input, chat, helpVisible, help, cases, hasCtx, riskColor, riskText, isNight, isLead, mask, streaming, send, clearCtx, playCase, skipStream, archiveSession, openHelp, openHelpFromNoMatch, reAsk, submitHelp, simCtxTimeout, simLoginTimeout, store };
+    return { input, chat, helpVisible, help, cases, sessionList, hasCtx, riskColor, riskText, isNight, isLead, mask, streaming, send, askClearCtx, clearCtx, playCase, skipStream, archiveSession, openHelp, openFollowOrder, startNewChat, openHelpFromNoMatch, reAsk, submitHelp, simCtxTimeout, simLoginTimeout, capNotice:FB_CAP_MSG, questionAt, lastQuestion, store };
   }
 };
 
@@ -1120,8 +1807,9 @@ const ArchivePage = {
           <span v-else class="wb-mini">—</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="240">
+      <el-table-column label="操作" width="320">
         <template #default="{row}">
+          <el-button size="small" type="primary" plain @click="openDetail(row)">详情</el-button>
           <el-button size="small" @click="resume(row)">继续</el-button>
           <el-button size="small" @click="goAudit">审计</el-button>
           <el-button size="small" @click="exportS(row)">导出</el-button>
@@ -1129,6 +1817,40 @@ const ArchivePage = {
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 会话详情：逐条完整聊天记录（只读回放，不提供交互按钮） -->
+    <el-dialog v-model="dv" :title="'会话详情 · '+(ds?ds.title:'')" width="720px" top="6vh">
+      <template v-if="ds">
+        <div class="wb-arc-meta">
+          <span>会话ID：<b>{{ds.id}}</b></span>
+          <span>时间：<b>{{ds.time}}</b></span>
+          <span>风险等级：<b :class="riskCls(ds.risk)">{{ds.risk}}</b></span>
+          <span>状态：<b>{{ds.status}}</b></span>
+          <span>关联工单：<b>{{ds.orderTag||'—'}}</b></span>
+        </div>
+        <div class="wb-section-title" style="margin:12px 0 8px;">逐条聊天记录（{{ds.messages ? ds.messages.length : 0}} 条）</div>
+        <div class="wb-archive-log">
+          <div v-for="(m,i) in (ds.messages||[])" :key="i" class="wb-arc-row">
+            <div class="wb-arc-idx">{{i+1}}. {{roleName(m.r)}}</div>
+            <div v-if="m.r==='user'" class="wb-bubble user">{{m.t}}</div>
+            <div v-else-if="m.r==='bot'" class="wb-bubble bot">
+              <div>{{m.t}}</div>
+              <div v-if="m.risk || m.doc || m.guard" class="wb-mini" style="margin-top:6px;">
+                风险 {{m.risk||'—'}}<span v-if="m.doc"> · 溯源 {{m.doc}}</span><span v-if="m.guard"> · 护栏拦截</span>
+              </div>
+            </div>
+            <div v-else-if="m.r==='system'" class="wb-bubble sys">{{m.t}}</div>
+            <div v-else-if="m.r==='nomatch'" class="wb-bubble nomatch">
+              <div class="wb-nm-title">暂时未检索到匹配的工艺文档</div>
+              <div class="wb-nm-body">{{m.q}}</div>
+            </div>
+            <div v-else class="wb-bubble bot">{{m.t||m.q||'—'}}</div>
+          </div>
+          <div v-if="!ds.messages || !ds.messages.length" class="wb-tip">暂无聊天记录。</div>
+        </div>
+      </template>
+      <template #footer><el-button @click="dv=false">关闭</el-button></template>
+    </el-dialog>
 
     <el-dialog v-model="ov" title="工单详情" width="560px">
       <el-descriptions :column="1" border v-if="cur">
@@ -1148,13 +1870,16 @@ const ArchivePage = {
   </div>`,
   setup(){
     const ov=ref(false); const cur=ref(null);
+    const dv=ref(false); const ds=ref(null);
     function riskCls(r){ return r==='高'?'tag-high':r==='中'?'tag-mid':'tag-low'; }
+    function roleName(r){ return r==='user'?'用户提问':r==='bot'?'AI 回答':r==='system'?'系统提示':r==='nomatch'?'零命中兜底':'消息'; }
+    function openDetail(row){ ds.value=row; dv.value=true; }
     function viewOrder(id){ cur.value = store.orders.find(o=>o.id===id)||null; ov.value=!!cur.value; if(!cur.value) EP.ElMessage.warning('未找到关联工单'); }
     function resume(row){ store.currentPage='qa'; EP.ElMessage.info('已切换到问答页继续：'+row.id); }
     function goAudit(){ store.currentPage='audit'; }
     function exportS(row){ EP.ElMessage.success('已导出会话 '+row.id+'（演示）'); }
     function del(row){ store.sessions = store.sessions.filter(s=>s.id!==row.id); EP.ElMessage.success('已删除'); }
-    return { store, ov, cur, riskCls, viewOrder, resume, goAudit, exportS, del, canSeeHighParam };
+    return { store, ov, cur, dv, ds, riskCls, roleName, openDetail, viewOrder, resume, goAudit, exportS, del, canSeeHighParam };
   }
 };
 
@@ -1208,6 +1933,7 @@ const DocPage = {
     <el-table :data="$sorted(filtered, 'docs', 'effective')" border style="width:100%">
       <el-table-column prop="id" label="编号" width="110" />
       <el-table-column prop="cat" label="分类" width="150" />
+      <el-table-column prop="ver" label="版本号" width="90"><template #default="{row}">{{row.ver||'—'}}</template></el-table-column>
       <el-table-column prop="title" label="标题" min-width="220" />
       <el-table-column label="制程" width="80"><template #default="{row}">{{row.process||'—'}}</template></el-table-column>
       <el-table-column label="产品" width="80"><template #default="{row}">{{row.product||'—'}}</template></el-table-column>
@@ -1227,7 +1953,9 @@ const DocPage = {
           <el-descriptions-item label="制程">{{cur.process||'通用'}}</el-descriptions-item>
           <el-descriptions-item label="产品">{{cur.product||'通用'}}</el-descriptions-item>
           <el-descriptions-item label="风险等级"><span :class="riskCls(cur.risk)">{{cur.risk}}</span></el-descriptions-item>
-          <el-descriptions-item label="文档版本/状态">{{cur.ver||'—'}} / {{cur.status||'—'}}</el-descriptions-item>
+          <el-descriptions-item label="版本号 / 状态">{{cur.ver||'—'}} / {{cur.status||'—'}}</el-descriptions-item>
+          <el-descriptions-item label="失效时间">{{cur.expire||'—'}}</el-descriptions-item>
+          <el-descriptions-item label="上传人">{{cur.uploader||'—'}}</el-descriptions-item>
         </el-descriptions>
         <div style="margin-top:12px;font-weight:700;">摘要</div>
         <div class="wb-mini" style="margin:4px 0 12px;">{{cur.summary}}</div>
@@ -1301,6 +2029,62 @@ const EvalPage = {
       <div class="wb-stat"><div class="n" style="color:var(--wb-blue)">{{metrics.recall}}%</div><div class="l">有效召回率</div><div class="wb-mini" style="margin-top:4px;line-height:1.4;">回答能正确检索并引用对应参考溯源文档的评测条目 ÷ 全部评测条目</div></div>
       <div class="wb-stat"><div class="n">{{store.evalGold.length+store.evalBlind.length}}</div><div class="l">评测条目总数</div></div>
     </div>
+
+    <!-- 用户反馈汇总：与幻觉率 / 检索指标同页；全部 AI 气泡的 👍 / 👎 统一入库 -->
+    <div class="wb-fb-summary">
+      <div class="wb-section-title">用户反馈汇总 <span class="wb-demo-tag">与幻觉率 / 检索指标同页 · 全部气泡反馈统一入库</span></div>
+      <div class="wb-fb-kpis">
+        <div class="wb-fb-kpi"><b>{{fbStats.total}}</b><span>反馈总数</span></div>
+        <div class="wb-fb-kpi"><b style="color:var(--wb-green)">{{fbStats.up}}</b><span>👍 认可</span></div>
+        <div class="wb-fb-kpi"><b style="color:var(--wb-red)">{{fbStats.down}}</b><span>👎 不认可</span></div>
+        <div class="wb-fb-kpi"><b style="color:var(--wb-yellow)">{{fbStats.zero}}</b><span>知识库 0 命中反馈</span></div>
+      </div>
+      <div class="wb-fb-tags">
+        <div class="wb-fb-group-title">按标签分类 <span class="wb-demo-tag">点击标签筛选下方明细 · 标签由消息类型与反馈方向自动判定</span></div>
+        <div class="wb-fb-tag-list">
+          <button type="button" class="wb-fb-tag-chip" :class="{'is-active':tagFilter===''}"
+            :aria-pressed="tagFilter===''?'true':'false'" @click="tagFilter=''">全部 <b>{{fbStats.total}}</b></button>
+          <button v-for="g in fbTagGroups" :key="g.name" type="button" class="wb-fb-tag-chip"
+            :class="{'is-active':tagFilter===g.name}" :aria-pressed="tagFilter===g.name?'true':'false'"
+            @click="tagFilter = tagFilter===g.name ? '' : g.name">{{g.name}} <b>{{g.count}}</b></button>
+        </div>
+        <div v-if="tagFilter" class="wb-fb-filter-note">
+          当前筛选：{{tagFilter}} · {{feedbackRows.length}} 条
+          <button type="button" @click="tagFilter=''">清除筛选</button>
+        </div>
+      </div>
+      <el-table :data="feedbackRows" border size="small" style="width:100%">
+        <el-table-column prop="time" label="时间" width="150"/>
+        <el-table-column prop="session" label="本条会话" min-width="170" show-overflow-tooltip/>
+        <el-table-column prop="kindLabel" label="消息类型" width="150"/>
+        <el-table-column label="反馈" width="100">
+          <template #default="{row}"><span :class="row.vote==='up'?'tag-low':'tag-high'">{{row.vote==='up'?'👍 认可':'👎 不认可'}}</span></template>
+        </el-table-column>
+        <el-table-column label="原因 / 自动标签" min-width="180" show-overflow-tooltip>
+          <template #default="{row}"><span v-if="row.tags && row.tags.length">{{row.tags.join('、')}}</span><span v-else class="wb-mini">—</span></template>
+        </el-table-column>
+        <el-table-column prop="risk" label="风险标签" width="80"/>
+        <el-table-column label="对应检索 Chunk" min-width="210" show-overflow-tooltip>
+          <template #default="{row}"><span class="wb-mini">{{row.chunk||'—'}}</span></template>
+        </el-table-column>
+      </el-table>
+      <div class="wb-tip" style="margin-top:10px;">口径：反馈按消息去重汇总（同一条消息重复点击更新原记录）；绑定字段 = 本条会话 + 对应检索 Chunk + 风险标签；标签按消息类型与反馈方向自动判定并分类展示。仅【正式工艺回答】点踩会展开二级单选反馈面板，其余 3 类只做后台静默记录。</div>
+      <div class="wb-fb-group">
+        <div class="wb-fb-group-title">知识库缺资料-0命中反馈 <span class="wb-demo-tag">单独归类 · 文档增补线索</span></div>
+        <el-table :data="zeroFeedback" border size="small" style="width:100%" empty-text="暂无 0 命中反馈">
+          <el-table-column prop="time" label="时间" width="150"/>
+          <el-table-column prop="session" label="本条会话" min-width="170" show-overflow-tooltip/>
+          <el-table-column prop="question" label="原始提问" min-width="200" show-overflow-tooltip/>
+          <el-table-column label="自动标签" width="190">
+            <template #default><el-tag type="warning" size="small" effect="plain">{{zeroTag}}</el-tag></template>
+          </el-table-column>
+          <el-table-column label="反馈" width="100">
+            <template #default="{row}">{{row.vote==='up'?'👍 认可':'👎 不认可'}}</template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
     <el-tabs>
       <el-tab-pane label="固定离线黄金评测集">
         <el-table :data="store.evalGold" border>
@@ -1338,7 +2122,32 @@ const EvalPage = {
       return { hallu, block: 92, recall: 95 };
     });
     function riskCls(r){ return r==='高'?'tag-high':r==='中'?'tag-mid':'tag-low'; }
-    return { store, metrics, riskCls };
+    const tagFilter = ref('');
+    const fbStats = computed(()=>{
+      const f = store.feedback;
+      return { total:f.length, up:f.filter(x=>x.vote==='up').length,
+               down:f.filter(x=>x.vote==='down').length,
+               zero:f.filter(x=>(x.tags||[]).indexOf(FB_ZERO_TAG)>=0).length };
+    });
+    // 按标签分类：定稿标签固定优先序，二级面板原因标签与非分类记录随后
+    const fbTagGroups = computed(()=>{
+      const f = store.feedback, names = FB_TAG_ORDER.slice();
+      f.forEach(x=> (x.tags||[]).forEach(t=>{ if(names.indexOf(t)<0) names.push(t); }));
+      const groups = names.map(name=>({ name, count:f.filter(x=>(x.tags||[]).indexOf(name)>=0).length }));
+      const untagged = f.filter(x=> !(x.tags||[]).length).length;
+      if(untagged) groups.push({ name:FB_UNTAGGED, count:untagged });
+      return groups;
+    });
+    const feedbackRows = computed(()=>{
+      const t = tagFilter.value, f = store.feedback;
+      if(!t) return f;
+      if(t===FB_UNTAGGED) return f.filter(x=> !(x.tags||[]).length);
+      return f.filter(x=> (x.tags||[]).indexOf(t)>=0);
+    });
+    // 文档增补线索按标签归类：0 命中 👍 标【确实无对应资料】，不进入线索表
+    const zeroFeedback = computed(()=> store.feedback.filter(x=>(x.tags||[]).indexOf(FB_ZERO_TAG)>=0));
+    return { store, metrics, riskCls, fbStats, zeroFeedback, zeroTag:FB_ZERO_TAG,
+             tagFilter, feedbackRows, fbTagGroups };
   }
 };
 
@@ -1377,19 +2186,39 @@ const GuardPage = {
       <div class="wb-card" style="padding:14px;border-style:dashed;">
         <div style="font-weight:700;margin-bottom:8px;">🌙 夜间策略（20:00–次日08:00，含节假日）</div>
         <div class="wb-mini">夜间暂停超时倒计时、不自动升级、不夜间打扰。</div>
+        <div class="wb-mini" style="margin-top:6px;color:var(--wb-red);">例外：紧急工单（紧急停线 / 优先级紧急）夜间不暂停计时，30 分钟超时正常执行、即时穿透推送。</div>
         <div class="wb-mini" style="margin-top:6px;">次日批量推送时间：
           <el-time-picker v-model="batchTime" format="HH:mm" value-format="HH:mm" size="small" style="width:120px;"/>
         </div>
         <div class="wb-mini" style="margin-top:6px;">紧急工单独立推送规则：<el-switch v-model="store.dayNight.urgentPush" /> 即时穿透推送</div>
       </div>
     </div>
+    <div class="wb-section-title" style="font-size:14px;margin-top:18px;">上下文超时策略配置 <span class="wb-demo-tag">仅主管可见</span></div>
+    <div class="wb-card" style="padding:14px;border-style:dashed;">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <span class="wb-mini">无新消息自动清空 AI 记忆：</span>
+        <el-radio-group v-model="store.ctxPolicy.timeoutMin" size="small" @change="applyCtxPolicy">
+          <el-radio-button :label="20">20 分钟</el-radio-button>
+          <el-radio-button :label="30">30 分钟</el-radio-button>
+        </el-radio-group>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-top:10px;">
+        <span class="wb-mini" style="padding-top:6px;">高危参数高频使用用户组（单独 20 分钟）：</span>
+        <el-checkbox-group v-model="store.ctxPolicy.highRiskGroups" size="small" @change="applyCtxPolicy">
+          <el-checkbox v-for="r in ctxRoles" :key="r.key" :label="r.key">{{r.label}}</el-checkbox>
+        </el-checkbox-group>
+      </div>
+      <div class="wb-mini" style="margin-top:10px;">距超时还剩 2 分钟提示；超时后 AI 不再保留本次对话上下文，历史记录可前往会话存档查看；全部高危链路计数器清零。</div>
+    </div>
     <div class="wb-tip" style="margin-top:12px;">配置为前端模拟，保存即生效；实际超时以问答页「模拟」按钮或看板演示按钮触发。</div>
   </div>`,
   setup(){
     const batchTime = ref(store.dayNight.batchPush);
     watch(batchTime, v=>{ if(v) store.dayNight.batchPush=v; });
+    const ctxRoles = Object.values(ROLES);
+    function applyCtxPolicy(){ armCtxTimer(); }   // 保存即生效：按新配置重新起算当前会话
     function riskCls(r){ return r==='高'?'tag-high':r==='中'?'tag-mid':'tag-low'; }
-    return { store, batchTime, riskCls };
+    return { store, batchTime, riskCls, ctxRoles, applyCtxPolicy };
   }
 };
 
@@ -1400,7 +2229,7 @@ const DashboardPage = {
   <div class="wb-card" style="padding:16px;">
     <div class="wb-section-title">主管数据看板 <span class="wb-demo-tag">仅统计视图 · 点击指标卡跳转工单池</span></div>
 
-    <div class="wb-stats" style="margin-bottom:14px;">
+    <div class="wb-stats wb-stats-grid" style="margin-bottom:14px;">
       <div class="wb-stat wb-stat-link" role="button" tabindex="0" :aria-label="'工单总量 '+metrics.total+' 条，点击进入工单池'" @click="goPool('all')" @keyup.enter="goPool('all')" @keyup.space.prevent="goPool('all')">
         <div class="n" style="color:var(--wb-blue)">{{metrics.total}}</div><div class="l">工单总量</div>
       </div>
@@ -1416,45 +2245,83 @@ const DashboardPage = {
       <div class="wb-stat wb-stat-link" role="button" tabindex="0" :aria-label="'紧急工单 '+metrics.urgent+' 条，点击进入工单池'" @click="goPool('urgent')" @keyup.enter="goPool('urgent')" @keyup.space.prevent="goPool('urgent')">
         <div class="n" style="color:var(--wb-red)">{{metrics.urgent}}</div><div class="l">紧急工单</div>
       </div>
+      <!-- 新增 2 张业务指标卡：与原有卡同列宽，纯统计展示，第二行右侧自然留白 -->
+      <div class="wb-stat wb-stat-static">
+        <div class="n" style="color:var(--wb-green)">{{metrics.urgentCloseRate}}%</div><div class="l">紧急工单闭环率</div>
+      </div>
+      <div class="wb-stat wb-stat-static">
+        <div class="n" style="color:var(--wb-red)">{{metrics.overduePct}}%</div><div class="l">超时工单占比</div>
+      </div>
     </div>
 
     <div class="wb-chart">
       <div class="wb-chart-head">
-        <div style="font-weight:700;font-size:14px;">工单提报趋势</div>
-        <div class="wb-mini">按提报日期汇总 · 最近 {{trend.length}} 个有工单的日期（演示数据）</div>
+        <div style="font-weight:700;font-size:14px;">工单提报/闭环趋势</div>
+        <div class="wb-chart-legend">
+          <span><i class="wb-chart-lg" style="background:var(--wb-blue)"></i>工单提报</span>
+          <span><i class="wb-chart-lg" style="background:var(--wb-green)"></i>工单闭环</span>
+        </div>
+        <div class="wb-mini" style="flex-basis:100%;">按提报日期 / 闭环日期分别汇总 · 最近 {{trend.length}} 个有工单的日期（演示数据）</div>
       </div>
       <div class="wb-chart-bars">
-        <div class="wb-chart-col" v-for="t in trend" :key="t.date" :title="t.date+'：'+t.n+' 单'">
-          <div class="wb-chart-val">{{t.n}}</div>
-          <div class="wb-chart-bar" :style="{height:barH(t.n)}"></div>
+        <div class="wb-chart-col" v-for="t in trend" :key="t.date" :title="t.date+'：提报 '+t.report+' 单 / 闭环 '+t.close+' 单'">
+          <div class="wb-chart-pair">
+            <div class="wb-chart-slot">
+              <div class="wb-chart-val">{{t.report}}</div>
+              <div class="wb-chart-bar is-report" :style="{height:barH(t.report)}"></div>
+            </div>
+            <div class="wb-chart-slot">
+              <div class="wb-chart-val">{{t.close}}</div>
+              <div class="wb-chart-bar is-close" :style="{height:barH(t.close)}"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="wb-chart-axis">
         <span class="wb-chart-x" v-for="t in trend" :key="t.date">{{t.date}}</span>
       </div>
-      <div class="wb-tip" style="margin-top:12px;">统计口径：工单总量 = 全部状态；超时工单 = 未闭环且倒计时归零；紧急工单 = 含紧急标签或优先级为紧急。看板仅做统计呈现，工单承接请在【工单池】完成。</div>
+      <div class="wb-tip" style="margin-top:12px;">统计口径：工单总量 = 全部状态；超时工单 = 未闭环且倒计时归零；紧急工单 = 含紧急标签或优先级为紧急。紧急工单闭环率 = 紧急工单中状态为已闭环的数量 / 紧急工单总量；超时工单占比 = 超时工单数 / 工单总量。趋势按提报日期（created）与闭环日期（closed）分别汇总，同一日期并列展示提报柱与闭环柱，共用一个纵轴比例。看板仅做统计呈现，工单承接请在【工单池】完成。</div>
     </div>
   </div>`,
   setup(){
-    const metrics = computed(()=>({
-      total: store.orders.length,
-      pendingEngineer: store.orders.filter(o=>o.status==='pending_engineer').length,
-      pendingSupervisor: store.orders.filter(o=>o.status==='pending_supervisor').length,
-      overdue: store.orders.filter(o=>o.status!=='closed' && orderCountdown(o,store.nowTs).cls==='timeout').length,
-      urgent: store.orders.filter(o=>o.tags.some(t=>t.indexOf('紧急')>=0)||o.priority==='紧急').length
-    }));
-    const trend = computed(()=>{
-      const map={};
-      store.orders.forEach(o=>{
-        const m=String(o.created||'').match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
-        if(!m) return;
-        const k=m[1]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[3]).padStart(2,'0');
-        map[k]=(map[k]||0)+1;
-      });
-      return Object.keys(map).sort().slice(-7).map(k=>({date:k.slice(5),n:map[k]}));
+    function dateKey(v){
+      const m=String(v||'').match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+      return m ? m[1]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[3]).padStart(2,'0') : '';
+    }
+    const isUrgent = o => (o.tags||[]).some(t=>t.indexOf('紧急')>=0) || o.priority==='紧急';
+    const isOverdue = o => o.status!=='closed' && orderCountdown(o,store.nowTs).cls==='timeout';
+    const metrics = computed(()=>{
+      const list = store.orders, total = list.length;
+      const overdue = list.filter(isOverdue).length;
+      const urgentList = list.filter(isUrgent);
+      const urgentClosed = urgentList.filter(o=>o.status==='closed').length;
+      return {
+        total,
+        pendingEngineer: list.filter(o=>o.status==='pending_engineer').length,
+        pendingSupervisor: list.filter(o=>o.status==='pending_supervisor').length,
+        overdue,
+        urgent: urgentList.length,
+        urgentCloseRate: urgentList.length ? Math.round(urgentClosed/urgentList.length*100) : 0,
+        overduePct: total ? Math.round(overdue/total*100) : 0
+      };
     });
-    const maxN = computed(()=> Math.max(1, ...trend.value.map(t=>t.n)));
-    function barH(n){ return Math.max(4, Math.round(n/maxN.value*80))+'%'; }
+    /* 双柱趋势：提报按 created、闭环按 closed 各自汇总；日期轴取两者并集的最近 7 个日期，
+       同一日期并列两根柱，共用 maxN 一个纵轴比例，避免两组柱各自缩放造成误读。 */
+    const trend = computed(()=>{
+      const rep={}, clo={};
+      store.orders.forEach(o=>{
+        const k=dateKey(o.created); if(k) rep[k]=(rep[k]||0)+1;
+        if(o.status==='closed'){
+          const last = (o.timeline||[]).filter(x=>/闭环/.test(x.e||'')).slice(-1)[0];
+          const ck = dateKey(o.closed) || dateKey(last && last.t);
+          if(ck) clo[ck]=(clo[ck]||0)+1;
+        }
+      });
+      const keys=[...new Set([...Object.keys(rep),...Object.keys(clo)])].sort().slice(-7);
+      return keys.map(k=>({date:k.slice(5), report:rep[k]||0, close:clo[k]||0}));
+    });
+    const maxN = computed(()=> Math.max(1, ...trend.value.map(t=>Math.max(t.report,t.close))));
+    function barH(n){ return n ? Math.max(4, Math.round(n/maxN.value*80))+'%' : '0%'; }
     function goPool(tab){
       store.poolTab = tab;
       if(store.currentPage!=='myorders'){ store.history.push(store.currentPage); store.currentPage='myorders'; }
@@ -1498,7 +2365,7 @@ const PoolPage = {
       </el-table-column>
       <el-table-column label="问题摘要" min-width="170"><template #default="{row}">{{maskSummary(row)}}</template></el-table-column>
       <el-table-column prop="priority" label="优先级" width="68" />
-      <el-table-column label="当前处理角色" width="94"><template #default="{row}">{{row.handler||'待分配'}}</template></el-table-column>
+      <el-table-column label="当前处理角色" width="150"><template #default="{row}">{{handlerRole(row)}}</template></el-table-column>
       <el-table-column label="工单状态" width="98"><template #default="{row}"><el-tag size="small" :type="statusType(row.status)">{{statusText(row.status)}}</el-tag></template></el-table-column>
       <el-table-column label="超时倒计时" width="170">
         <template #default="{row}">
@@ -1536,7 +2403,7 @@ const PoolPage = {
           <el-descriptions-item label="优先级">{{cur.priority}}</el-descriptions-item>
           <el-descriptions-item label="风险"><span :class="riskCls(cur.risk)">{{cur.risk}}</span></el-descriptions-item>
           <el-descriptions-item label="工单状态">{{statusText(cur.status)}}</el-descriptions-item>
-          <el-descriptions-item label="当前处理角色">{{cur.handler||'待分配'}}</el-descriptions-item>
+          <el-descriptions-item label="当前处理角色">{{handlerRole(cur, true)}}</el-descriptions-item>
           <el-descriptions-item label="工单创建时间">{{cur.created}}</el-descriptions-item>
           <el-descriptions-item label="计划超时截止时间">{{planDeadline(cur)}}</el-descriptions-item>
           <el-descriptions-item label="超时倒计时" :span="2">
@@ -1553,7 +2420,7 @@ const PoolPage = {
         </div>
         <div class="wb-mini">{{maskSummary(cur)}}</div>
 
-        <div class="wb-tip" style="margin:10px 0 0;">超时流转规则：日间工单 30 分钟未接单自动升级至主管介入池；夜间普通工单暂停计时，次日 08:10 恢复；紧急工单穿透即时推送，30 分钟超时正常执行。</div>
+        <div class="wb-tip" style="margin:10px 0 0;">超时流转规则：日间工单 30 分钟未接单自动升级至主管介入池；夜间普通工单暂停计时，次日 08:10 恢复；紧急工单夜间不暂停计时，穿透即时推送，30 分钟超时正常执行。</div>
 
         <div style="font-weight:700;margin:12px 0 4px;">流转时间线</div>
         <el-timeline style="padding-left:6px;">
@@ -1666,7 +2533,7 @@ const PoolPage = {
     function statusType(s){ return s==='closed'?'success':(s==='processing'?'':'warning'); }
     function tagType(t){ if(t.indexOf('紧急')>=0) return 'danger'; if(t.indexOf('夜间')>=0) return 'info'; if(t.indexOf('复合')>=0||t.indexOf('超时')>=0) return 'warning'; return ''; }
     function td(o){ return timeoutDisplay(o, store.nowTs); }
-    function planDeadline(o){ if(o.tags.indexOf('夜间上报')>=0 && o.status!=='closed') return '次日 08:10 恢复计时'; return fmtTs(o.deadlineTs!=null?o.deadlineTs:parseDeadline(o.deadline)); }
+    function planDeadline(o){ if(o.tags.indexOf('夜间上报')>=0 && !isUrgentOrder(o) && o.status!=='closed') return '次日 08:10 恢复计时'; return fmtTs(o.deadlineTs!=null?o.deadlineTs:parseDeadline(o.deadline)); }
     function convFor(id){ return getSessionMessages(id)!=null; }
     function openConv(id){ convSession.value=id; convMsgs.value=getSessionMessages(id); convOpen.value=true; }
     function rowCls({row}){ return row.id===hlId.value ? 'wb-row-hl' : ''; }
@@ -1689,11 +2556,18 @@ const PoolPage = {
     function demoTimeout(){
       const o = store.orders.find(x=>x.status==='pending_engineer');
       if(!o){ EP.ElMessage.info('当前无待承接工单可演示超时'); return; }
-      if(store.simNight||isNightNow()){ EP.ElMessage.info('夜间：'+o.id+' 暂停超时，不自动升级、不夜间打扰'); }
-      else { o.status='pending_supervisor'; o.tags.push('超时升级'); o.timeline.push({t:now(),e:'30分钟未接单，自动升级至主管介入池'}); wecomPush(['主管群'],'超时升级 '+o.id,o.summary+' 超时未接单，已推送主管。',o.id); EP.ElMessage.warning('已自动升级 '+o.id); }
+      const night = store.simNight||isNightNow();
+      // 夜间普通工单暂停；紧急工单穿透，仍执行 30 分钟超时升级
+      if(night && !isUrgentOrder(o)){ EP.ElMessage.info('夜间：'+o.id+' 暂停超时，不自动升级、不夜间打扰'); }
+      else {
+        o.status='pending_supervisor'; o.tags.push('超时升级'); o.timeline.push({t:now(),e:'30分钟未接单，自动升级至主管介入池'});
+        wecomPush(['主管群'],'超时升级 '+o.id,o.summary+' 超时未接单，已推送主管。',o.id);
+        EP.ElMessage.warning('已自动升级 '+o.id+(night && isUrgentOrder(o) ? '（紧急工单夜间不暂停计时）':''));
+      }
     }
     function demoBatch(){
-      const nightOrders = store.orders.filter(o=>o.tags.includes('夜间上报') && o.status==='pending_engineer');
+      // 紧急工单夜间持续计时，不进入「夜间积压次日批量推送」
+      const nightOrders = store.orders.filter(o=>o.tags.includes('夜间上报') && !isUrgentOrder(o) && o.status==='pending_engineer');
       if(!nightOrders.length){ EP.ElMessage.info('当前无夜间积压工单'); return; }
       nightOrders.forEach(o=>{ o.tags.push('夜间积压·白班优先处理'); o.timeline.push({t:now(),e:'次日 '+store.dayNight.batchPush+' 批量推送主管'}); });
       wecomPush(['主管群'],'夜间积压批量推送', nightOrders.length+' 条夜间工单已批量推送，请白班优先处理。');
@@ -1701,7 +2575,7 @@ const PoolPage = {
     }
     function newHelp(){ store.currentPage='qa'; EP.ElMessage.info('请前往「智能问答」页提交人工求助工单'); }
     function addComment(){ if(!commentText.value){EP.ElMessage.warning('请输入留言');return;} cur.value.comments.push({time:now(), who:store.user.name+'('+ROLES[store.user.role].short+')', text:commentText.value}); commentText.value=''; EP.ElMessage.success('留言已追加'); }
-    return { store, filter, tabs, page, pageSize, paged, onPageChange, onSizeChange, take, canTake, takeLabel, demoTimeout, demoBatch, newHelp, priFilter, tagFilter, resetFilters, dv, cur, tv, transferTo, commentText, convOpen, convSession, convMsgs, hlId, isSup, isLead, canAct, filtered, riskCls, statusText, statusType, tagType, td, planDeadline, convFor, openConv, rowCls, maskSummary, openDetail, accept, closeOrder, escalate, transfer, doTransfer, addComment };
+    return { store, filter, tabs, page, pageSize, paged, onPageChange, onSizeChange, handlerRole, take, canTake, takeLabel, demoTimeout, demoBatch, newHelp, priFilter, tagFilter, resetFilters, dv, cur, tv, transferTo, commentText, convOpen, convSession, convMsgs, hlId, isSup, isLead, canAct, filtered, riskCls, statusText, statusType, tagType, td, planDeadline, convFor, openConv, rowCls, maskSummary, openDetail, accept, closeOrder, escalate, transfer, doTransfer, addComment };
   }
 };
 
@@ -1743,7 +2617,7 @@ const MinePage = {
       </el-table-column>
       <el-table-column label="问题摘要" min-width="170"><template #default="{row}">{{maskSummary(row)}}</template></el-table-column>
       <el-table-column prop="priority" label="优先级" width="68" />
-      <el-table-column label="当前处理角色" width="94"><template #default="{row}">{{row.handler||'待分配'}}</template></el-table-column>
+      <el-table-column label="当前处理角色" width="150"><template #default="{row}">{{handlerRole(row)}}</template></el-table-column>
       <el-table-column label="工单状态" width="98"><template #default="{row}"><el-tag size="small" :type="statusType(row.status)">{{statusText(row.status)}}</el-tag></template></el-table-column>
       <el-table-column label="超时倒计时" width="170">
         <template #default="{row}">
@@ -1764,7 +2638,7 @@ const MinePage = {
           <el-descriptions-item label="优先级">{{cur.priority}}</el-descriptions-item>
           <el-descriptions-item label="风险"><span :class="riskCls(cur.risk)">{{cur.risk}}</span></el-descriptions-item>
           <el-descriptions-item label="工单状态">{{statusText(cur.status)}}</el-descriptions-item>
-          <el-descriptions-item label="当前处理角色">{{cur.handler||'待分配'}}</el-descriptions-item>
+          <el-descriptions-item label="当前处理角色">{{handlerRole(cur, true)}}</el-descriptions-item>
           <el-descriptions-item label="工单创建时间">{{cur.created}}</el-descriptions-item>
           <el-descriptions-item label="计划超时截止时间">{{planDeadline(cur)}}</el-descriptions-item>
           <el-descriptions-item label="超时倒计时" :span="2">
@@ -1781,7 +2655,7 @@ const MinePage = {
         </div>
         <div class="wb-mini">{{maskSummary(cur)}}</div>
 
-        <div class="wb-tip" style="margin:10px 0 0;">超时流转规则：日间工单 30 分钟未接单自动升级至主管介入池；夜间普通工单暂停计时，次日 08:10 恢复；紧急工单穿透即时推送，30 分钟超时正常执行。</div>
+        <div class="wb-tip" style="margin:10px 0 0;">超时流转规则：日间工单 30 分钟未接单自动升级至主管介入池；夜间普通工单暂停计时，次日 08:10 恢复；紧急工单夜间不暂停计时，穿透即时推送，30 分钟超时正常执行。</div>
 
         <div style="font-weight:700;margin:12px 0 4px;">流转时间线</div>
         <el-timeline style="padding-left:6px;">
@@ -1861,7 +2735,7 @@ const MinePage = {
     function statusType(s){ return s==='closed'?'success':(s==='processing'?'':'warning'); }
     function tagType(t){ if(t.indexOf('紧急')>=0) return 'danger'; if(t.indexOf('夜间')>=0) return 'info'; if(t.indexOf('复合')>=0||t.indexOf('超时')>=0) return 'warning'; return ''; }
     function td(o){ return timeoutDisplay(o, store.nowTs); }
-    function planDeadline(o){ if(o.tags.indexOf('夜间上报')>=0 && o.status!=='closed') return '次日 08:10 恢复计时'; return fmtTs(o.deadlineTs!=null?o.deadlineTs:parseDeadline(o.deadline)); }
+    function planDeadline(o){ if(o.tags.indexOf('夜间上报')>=0 && !isUrgentOrder(o) && o.status!=='closed') return '次日 08:10 恢复计时'; return fmtTs(o.deadlineTs!=null?o.deadlineTs:parseDeadline(o.deadline)); }
     function convFor(id){ return getSessionMessages(id)!=null; }
     function openConv(id){ convSession.value=id; convMsgs.value=getSessionMessages(id); convOpen.value=true; }
     function rowCls({row}){ return row.id===hlId.value ? 'wb-row-hl' : ''; }
@@ -1873,11 +2747,122 @@ const MinePage = {
     function transfer(o){ tv.value=true; cur.value=o; }
     function doTransfer(){ if(!transferTo.value){EP.ElMessage.warning('请选择工程师');return;} cur.value.status='processing'; cur.value.handler=transferTo.value; cur.value.tags=cur.value.tags.filter(t=>t!=='升级'); cur.value.deadline=deadlineIn(store.dayNight.dayTimeout); cur.value.deadlineTs=Date.now()+store.dayNight.dayTimeout*60000; cur.value.timeline.push({t:now(),e:'主管转办指派给 '+transferTo.value+'，重置30分钟倒计时'}); tv.value=false; EP.ElMessage.success('已转办给 '+transferTo.value); }
     function addComment(){ if(!commentText.value){EP.ElMessage.warning('请输入留言');return;} cur.value.comments.push({time:now(), who:store.user.name+'('+ROLES[store.user.role].short+')', text:commentText.value}); commentText.value=''; EP.ElMessage.success('留言已追加'); }
-    return { store, filter, priFilter, tagFilter, resetFilters, dv, cur, tv, transferTo, commentText, convOpen, convSession, convMsgs, hlId, isSup, isLead, canAct, filtered, riskCls, statusText, statusType, tagType, td, planDeadline, convFor, openConv, rowCls, maskSummary, openDetail, accept, closeOrder, escalate, transfer, doTransfer, addComment };
+    return { store, filter, priFilter, tagFilter, resetFilters, handlerRole, dv, cur, tv, transferTo, commentText, convOpen, convSession, convMsgs, hlId, isSup, isLead, canAct, filtered, riskCls, statusText, statusType, tagType, td, planDeadline, convFor, openConv, rowCls, maskSummary, openDetail, accept, closeOrder, escalate, transfer, doTransfer, addComment };
   }
 };
 
 /* ---- 根组件 ---- */
+/* ========================= 问卷固定题目与演示答卷（运营后台 / 问卷弹窗共用）=========================
+   题目固定为两道，不提供自定义题目编辑；SURVEY_HELP_OPTIONS 为第一题固定 5 档选项。 */
+const SURVEY_HELP_OPTIONS = ['很有帮助','有帮助','一般','帮助较少','没有帮助'];
+/* 原型无真实多用户后端，以下为确定性演示数据；界面已明确标注「演示数据」 */
+const DEMO_RECEIVE_SCOPE = '全员（班组长 / 工程师 / 主管）';
+const DEMO_RECEIVE_TOTAL = 8;
+const DEMO_SURVEY_ANSWERS = [
+  { who:'李工程师', help:'很有帮助', comment:'溯源文档能直接跳转，希望补充工艺窗口类的案例。', time:'2026-08-05 09:20', demo:true },
+  { who:'王主管',   help:'有帮助',   comment:'高危参数标红提醒清晰，建议增加排查步骤清单导出。', time:'2026-08-05 09:34', demo:true },
+  { who:'班组长',   help:'一般',     comment:'',                                              time:'2026-08-05 10:02', demo:true },
+  { who:'张工程师', help:'很有帮助', comment:'希望零命中时能直接给出转人工入口。',           time:'2026-08-05 10:18', demo:true }
+];
+
+/* ========================= 运营后台：站内通知 + 内置问卷下发 =========================
+   规则 1：下发入口仅此一处，且仅运营(admin)可见；主管 / 工程师 / 班组长页面无任何发送操作。
+   规则 4：下发只写入通知数据与下发历史，不弹问卷、不自动唤起任何浮层。 */
+const NoticeAdminPage = {
+  template:`
+  <div v-if="isAdmin" class="wb-card" style="padding:16px;">
+    <div class="wb-section-title">站内通知与问卷下发 <span class="wb-demo-tag">仅运营可见</span></div>
+    <el-form label-width="100px" style="max-width:640px;">
+      <el-form-item label="通知标题"><el-input v-model="form.title" placeholder="例如：智能问答使用体验调研" /></el-form-item>
+      <el-form-item label="通知内容"><el-input v-model="form.body" type="textarea" :rows="3" placeholder="填写通知正文（选填）" /></el-form-item>
+    </el-form>
+    <div class="wb-tip" style="max-width:640px;">下发后将附带一份内置使用体验问卷（题目固定为两道，不可编辑）。用户需主动点击消息卡片内的【打开问卷】才会唤起问卷弹窗，系统不会自动弹出。</div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px;">
+      <el-button type="primary" @click="publishNotice">下发通知</el-button>
+      <span class="wb-mini">已下发 {{store.notices.length}} 条 · 已完成 {{doneCount}} 条</span>
+    </div>
+
+    <!-- 下发历史记录：一次下发 = 一条批次记录 -->
+    <div style="margin-top:22px;">
+      <div class="wb-section-title">下发历史记录 <span class="wb-mini">演示数据：接收对象范围与下发总数为模拟值</span></div>
+      <el-table :data="history" size="small" border style="width:100%;">
+        <el-table-column prop="title" label="通知标题" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="time" label="下发时间" width="170" />
+        <el-table-column prop="scope" label="接收对象范围" min-width="210" show-overflow-tooltip />
+        <el-table-column prop="total" label="下发总数" width="100" align="center" />
+        <el-table-column label="已完成填写数量" width="140" align="center">
+          <template #default="{row}">{{row.answers.length}}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="110" align="center">
+          <template #default="{row}"><el-button size="small" type="primary" plain @click="openResult(row)">查看结果</el-button></template>
+        </el-table-column>
+      </el-table>
+      <div v-if="!history.length" class="wb-tip" style="margin-top:8px;">暂无下发记录，点击上方【下发通知】后生成。</div>
+    </div>
+
+    <!-- 问卷结果面板：第一题选项统计 + 第二题全部文本留言 -->
+    <el-dialog v-model="resultVisible" :title="'问卷结果 · '+(cur?cur.title:'')" width="640px" top="10vh">
+      <template v-if="cur">
+        <div class="wb-tip">演示数据：答卷含预置模拟问卷与实际提交；仅展示本条下发的填写结果。</div>
+        <div class="wb-section-title" style="margin:16px 0 10px;">第一题 · 本次智能问答回答对您排查问题的帮助程度？（{{cur.answers.length}} 份）</div>
+        <div v-for="o in resultStats" :key="o.label" class="wb-res-row">
+          <span class="wb-res-label">{{o.label}}</span>
+          <div class="wb-res-bar"><div :style="{width:o.pct+'%'}"></div></div>
+          <span class="wb-res-num">{{o.n}} 票</span>
+        </div>
+        <div class="wb-section-title" style="margin:20px 0 10px;">第二题 · 其他意见或建议（全部文本留言）</div>
+        <div v-if="!resultComments.length" class="wb-tip">暂无文本留言。</div>
+        <div v-for="(c,i) in resultComments" :key="i" class="wb-res-comment">
+          <div class="wb-mini">{{c.who}} · {{c.time}}<span v-if="c.demo"> · 演示数据</span></div>
+          <div>{{c.text}}</div>
+        </div>
+      </template>
+      <template #footer><el-button @click="resultVisible=false">关闭</el-button></template>
+    </el-dialog>
+  </div>
+  <div v-else class="wb-card" style="padding:16px;">
+    <div class="wb-section-title">无权访问</div>
+    <div class="wb-mini">通知下发仅对运营账号开放。</div>
+  </div>`,
+  setup(){
+    const isAdmin = computed(()=> store.user && store.user.role==='admin');  // isAdmin = 运营账号标识（内部 key 沿用 admin）
+    const form = reactive({ title:'', body:'' });
+    const doneCount = computed(()=> store.notices.filter(n=> n.status==='done').length);
+    const history = computed(()=> store.noticeHistory);
+    const resultVisible = ref(false);
+    const cur = ref(null);
+    const resultStats = computed(()=>{
+      const list = cur.value ? cur.value.answers : [];
+      return SURVEY_HELP_OPTIONS.map(label=>{
+        const n = list.filter(a=>a.help===label).length;
+        return { label, n, pct: list.length ? Math.round(n/list.length*100) : 0 };
+      });
+    });
+    const resultComments = computed(()=> (cur.value ? cur.value.answers : [])
+      .filter(a=> a.comment && a.comment.trim())
+      .map(a=>({ who:a.who, time:a.time, text:a.comment, demo:!!a.demo })));
+    function openResult(row){ cur.value=row; resultVisible.value=true; }
+    function publishNotice(){
+      if(!isAdmin.value) return;                     // 纵深防御：非运营账号一律不下发
+      const t = form.title.trim();
+      if(!t){ EP.ElMessage.warning('请填写通知标题'); return; }
+      const id = 'N-'+Date.now();
+      store.notices.unshift({
+        id, title:t, body:form.body.trim()||'（无正文）', time:now(),
+        unread:true, status:'pending', hasSurvey:true, hintShown:false, answers:null, doneTime:''
+      });
+      store.noticeHistory.unshift({
+        id:'H-'+Date.now(), noticeId:id, title:t, time:now(),
+        scope:DEMO_RECEIVE_SCOPE, total:DEMO_RECEIVE_TOTAL,
+        answers: DEMO_SURVEY_ANSWERS.map(a=>({...a}))
+      });
+      form.title=''; form.body='';
+      EP.ElMessage.success('通知已下发，附带内置问卷');
+    }
+    return { store, isAdmin, form, doneCount, history, resultVisible, cur, resultStats, resultComments, openResult, publishNotice };
+  }
+};
+
 const App = {
   template:`
   <login-page v-if="!store.user" />
@@ -1911,11 +2896,40 @@ const App = {
         </div>
         <div class="wb-head-right">
           <span class="wb-mini wb-hide-narrow">🕐 {{clock}}</span>
-          <el-badge :value="alertCount" :hidden="alertCount===0" :max="99">
-            <el-button size="small" circle @click="goAlert" title="待处理 / 即将超时工单提醒（点击进入工单池或我的工单）">
-              <el-icon><component :is="'Bell'"/></el-icon>
-            </el-button>
-          </el-badge>
+          <!-- 消息中心：右上角铃铛，新消息带红点；问卷只能由消息卡片主动唤起 -->
+          <div class="wb-notice-wrap">
+            <el-badge :is-dot="unreadCount>0" class="wb-notice-bell">
+              <el-button size="small" circle @click="toggleNotice" title="消息中心" aria-label="消息中心">
+                <el-icon><component :is="'Bell'"/></el-icon>
+              </el-button>
+            </el-badge>
+            <div v-if="noticeOpen" class="wb-notice-panel" @click.stop>
+              <div class="wb-notice-head">
+                <b>消息中心</b>
+                <span class="wb-mini">{{unreadCount}} 条未读</span>
+                <el-button size="small" text @click="noticeOpen=false" title="关闭消息中心">关闭</el-button>
+              </div>
+              <div v-if="!store.notices.length" class="wb-notice-empty">暂无通知</div>
+              <div v-for="n in store.notices" :key="n.id" class="wb-notice-card" :class="{'is-unread':n.unread,'is-done':n.status==='done'}">
+                <div class="wb-notice-line">
+                  <span v-if="n.unread" class="wb-notice-dot" title="新消息"></span>
+                  <span class="wb-notice-title" :title="n.title">{{n.title}}</span>
+                  <span v-if="n.status==='done'" class="wb-notice-done">已完成</span>
+                </div>
+                <div class="wb-mini wb-notice-body">{{n.body}}</div>
+                <div class="wb-mini wb-notice-time">{{n.time}}</div>
+                <div class="wb-notice-actions">
+                  <el-button size="small" type="primary" plain :disabled="n.status==='done'" @click="openSurvey(n)">打开问卷</el-button>
+                  <span v-if="n.status==='done'" class="wb-mini">已完成，不可重复提交</span>
+                </div>
+              </div>
+              <!-- 原铃铛的工单预警入口迁移至此，保留既有可达性 -->
+              <div class="wb-notice-alert" @click="goAlertFromNotice">
+                <el-badge :value="alertCount" :hidden="alertCount===0" :max="99">待处理 / 即将超时工单</el-badge>
+                <span class="wb-mini">前往工单池 →</span>
+              </div>
+            </div>
+          </div>
           <el-tag :color="roleColor" style="color:#fff;border:none;">{{store.user.roleLabel}}</el-tag>
           <span class="wb-mini wb-hide-narrow">{{store.user.name}}</span>
           <el-button size="small" text type="primary" @click="relogin">切换角色/登出</el-button>
@@ -1931,8 +2945,32 @@ const App = {
         <dashboard-page v-else-if="store.currentPage==='dashboard'"/>
         <eval-page v-else-if="store.currentPage==='eval'"/>
         <guard-page v-else-if="store.currentPage==='guard'"/>
+        <notice-admin-page v-else-if="store.currentPage==='notice'"/>
       </el-main>
     </el-container>
+
+    <!-- 内置问卷：居中模态 + 半透明遮罩 + 中等尺寸 + 非全屏；仅由消息卡片主动唤起 -->
+    <el-dialog v-model="surveyVisible" title="智能问答使用体验问卷" width="560px" top="12vh"
+      :modal="true" modal-class="wb-survey-overlay" :close-on-click-modal="false"
+      class="wb-survey-dialog" @closed="onSurveyClosed">
+      <div class="wb-survey">
+        <div class="wb-survey-note">本次调研用于优化产线智能问答功能，约10秒完成，反馈数据仅用于产品迭代；</div>
+        <div class="wb-survey-q">
+          <div class="wb-survey-label">1. 本次智能问答回答对您排查问题的帮助程度？ <span class="wb-survey-req">必填</span></div>
+          <el-radio-group v-model="survey.help">
+            <el-radio v-for="o in helpOptions" :key="o" :label="o">{{o}}</el-radio>
+          </el-radio-group>
+        </div>
+        <div class="wb-survey-q">
+          <div class="wb-survey-label">2. 其他意见或建议 <span class="wb-mini">选填</span></div>
+          <el-input v-model="survey.comment" type="textarea" :rows="3" placeholder="请填写您的意见或建议" />
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="laterSurvey">稍后填写</el-button>
+        <el-button type="primary" @click="submitSurvey">提交</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 企微推送模拟弹窗 -->
     <el-dialog v-model="store.wecom.visible" :title="'📲 企业微信推送模拟 · '+store.wecom.title" width="480px">
@@ -1949,6 +2987,13 @@ const App = {
   </el-container>`,
   setup(){
     const clock = ref(hhmm());
+    /* ---- 站内通知 / 内置问卷（低频，页面无常驻入口）---- */
+    const noticeOpen = ref(false);
+    const surveyVisible = ref(false);
+    const surveyNotice = ref(null);
+    const survey = reactive({ help:'', comment:'' });
+    const helpOptions = SURVEY_HELP_OPTIONS;   // 题目固定：第一题 5 档选项与运营后台结果统计同源
+    const unreadCount = computed(()=> store.notices.filter(n=> n.unread).length);
     const menu = computed(()=> MENU.filter(m=> canView(m.key)) );
     const pageTitle = computed(()=>{ const m=MENU.find(x=>x.key===store.currentPage); return m?m.title:''; });
     const roleColor = computed(()=> ROLES[store.user?store.user.role:'team_lead'].color );
@@ -1980,7 +3025,38 @@ const App = {
       else go('mine');
     }
     function goAlert(){ go(canView('myorders') ? 'myorders' : 'mine'); }
+    function toggleNotice(){ noticeOpen.value = !noticeOpen.value; }
+    function goAlertFromNotice(){
+      noticeOpen.value=false;
+      if(store.user.role==='admin'){ EP.ElMessage.info('运营账号无工单处理权限'); return; }
+      goAlert();
+    }
+    /* 问卷只由消息卡片主动唤起；已完成状态不允许再次打开 */
+    function openSurvey(n){
+      if(n.status==='done') return;
+      surveyNotice.value=n;
+      survey.help = n.answers ? n.answers.help : '';
+      survey.comment = n.answers ? n.answers.comment : '';
+      noticeOpen.value=false;
+      surveyVisible.value=true;
+    }
+    function submitSurvey(){
+      const n=surveyNotice.value;
+      if(!n || n.status==='done'){ surveyVisible.value=false; return; }   // 不可重复提交
+      if(!survey.help){ EP.ElMessage.warning('请先选择帮助程度'); return; }  // 校验失败保留输入、不关闭
+      n.answers={ help:survey.help, comment:survey.comment.trim() };
+      n.status='done'; n.unread=false; n.doneTime=now();
+      // 答卷回写到对应下发批次，供【查看结果】聚合与「已完成填写数量」实时更新
+      const h = store.noticeHistory.find(x=> x.noticeId===n.id);
+      if(h) h.answers.push({ who:store.user.name, help:survey.help, comment:survey.comment.trim(), time:now(), demo:false });
+      surveyVisible.value=false;
+      EP.ElMessage.success('问卷已提交，感谢反馈');
+    }
+    function laterSurvey(){ surveyVisible.value=false; }   // 消息保留在列表内，可再次打开
+    function onSurveyClosed(){ surveyNotice.value=null; }
     watch(()=>store.currentPage, ()=> resetTableSort());   // 进入任一页面：所有时间列恢复默认倒序
+    // 切换角色 / 登出：关闭消息中心与问卷浮层，避免浮层状态泄漏到下一个用户会话
+    watch(()=>store.user, (u)=>{ if(!u){ noticeOpen.value=false; surveyVisible.value=false; surveyNotice.value=null; } });
     let timer=null;
     function syncNarrow(){ const n = window.innerWidth<=1024; store.isNarrow=n; if(n) store.sidebarCollapsed=true; }  // 窄屏默认收起侧栏为抽屉
     onMounted(()=>{
@@ -1989,7 +3065,8 @@ const App = {
       window.addEventListener('resize', syncNarrow);
     });
     onBeforeUnmount(()=>{ if(timer)clearInterval(timer); window.removeEventListener('resize', syncNarrow); stopTimers(); });
-    return { store, menu, pageTitle, roleColor, alertCount, clock, go, back, toggleSide, canBack, crumbs, relogin, goView, goAlert };
+    return { store, menu, pageTitle, roleColor, alertCount, clock, go, back, toggleSide, canBack, crumbs, relogin, goView, goAlert,
+      noticeOpen, unreadCount, toggleNotice, goAlertFromNotice, openSurvey, surveyVisible, survey, helpOptions, submitSurvey, laterSurvey, onSurveyClosed };
   }
 };
 
@@ -2000,6 +3077,7 @@ for(const [k,c] of Object.entries(ElementPlusIconsVue)){ app.component(k, c); }
 app.config.globalProperties.$sorted = sorted;
 app.component('time-sort-header', TimeSortHeader);
 app.component('source-refs', SourceRefs);
+app.component('msg-feedback', MsgFeedback);
 app.component('login-page', LoginPage);
 app.component('qa-page', QaPage);
 app.component('archive-page', ArchivePage);
@@ -2008,6 +3086,7 @@ app.component('doc-page', DocPage);
 app.component('dashboard-page', DashboardPage);
 app.component('eval-page', EvalPage);
 app.component('guard-page', GuardPage);
+app.component('notice-admin-page', NoticeAdminPage);
 app.component('my-orders-page', PoolPage);
 app.component('my-work-page', MinePage);
 app.mount('#app');
