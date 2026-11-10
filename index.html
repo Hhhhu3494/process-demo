@@ -299,6 +299,43 @@
     .wb-nm-body{ font-size:14px; line-height:1.6; }
     .wb-nm-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
     .wb-nm-tag{ font-size:11px; color:var(--wb-sub); }
+    /* ===== 人工求助工单 · 关联会话：默认当前对话 + 搜索选择 ===== */
+    .wb-help-session{ display:flex; align-items:center; gap:8px; width:100%; }
+    .wb-help-session .el-input{ flex:1 1 0%; width:auto; min-width:0; }   /* 覆盖 EP 默认 width:100%，保证按钮同行 */
+    .wb-help-session .el-button{ flex:0 0 auto; min-height:32px; }
+    .wb-help-hint{ margin:-2px 0 10px 92px; font-size:12px; line-height:1.5; color:var(--wb-sub); }
+    /* 会话存档页 · 选择关联会话模式：浅蓝信息条，仅在选择态出现 */
+    .wb-pick-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      padding:10px 12px; margin-bottom:12px; background:#eef4ff;
+      border:1px solid #c9dcff; border-radius:8px; font-size:13px; color:var(--wb-text); }
+    .wb-pick-txt{ flex:1 1 240px; line-height:1.5; }
+    .wb-pick-bar .el-button{ flex:0 0 auto; min-height:32px; }
+    /* 会话存档页 · 筛选栏：沿用 Element Plus 默认控件密度，桌面单行、窄屏换行 */
+    .wb-arc-filter{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+    .wb-arc-filter .el-select,.wb-arc-filter .el-date-editor{ flex:0 0 auto; max-width:100%; }
+    .wb-arc-filter .el-button{ min-height:32px; }
+    .wb-arc-count{ margin-left:auto; font-size:12px; color:var(--wb-sub); white-space:nowrap; }
+    .wb-arc-hint{ font-size:12px; line-height:1.5; color:var(--wb-sub); margin-bottom:12px; }
+    /* 会话存档 · 来源标签：三类落档来源用稳定色系区分，与首页数据模型图一致 */
+    .wb-src-tag{ display:inline-block; font-size:12px; line-height:1.4; padding:1px 8px; border-radius:6px; white-space:nowrap; }
+    .wb-src-tag--manual{ color:#0C447C; background:#E6F1FB; }
+    .wb-src-tag--ticket{ color:#27500A; background:#EAF3DE; }
+    .wb-src-tag--auto{ color:#633806; background:#FAEEDA; }
+    /* 会话存档 · 生产工单号：纯文本展示，等宽数字便于核对 ID */
+    .wb-prod-order{ font-size:12px; font-variant-numeric:tabular-nums; color:var(--wb-text); }
+    .wb-arc-pick-hint{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:12px;
+      color:var(--wb-warn); background:var(--wb-warn-bg); border:1px solid var(--wb-warn-line);
+      border-radius:8px; padding:6px 10px; margin-bottom:12px; }
+    @media (max-width:768px){
+      .wb-help-session .el-button,.wb-pick-bar .el-button{ min-height:44px; }   /* 触摸目标 ≥44px */
+      .wb-help-hint{ margin-left:0; }
+      .wb-arc-filter .el-select,.wb-arc-filter .el-date-editor{ width:100% !important; }
+      .wb-arc-filter .el-button{ min-height:44px; }
+      .wb-arc-filter .el-input__wrapper,.wb-arc-filter .el-select__wrapper,
+      .wb-arc-filter .el-range-editor .el-range-input{ min-height:44px; }   /* 窄屏触摸目标 */
+      .wb-arc-count{ margin-left:0; }
+    }
+    @media (max-width:480px){ .wb-arc-filter .el-range-separator{ width:20px; } }
     @media (max-width:768px){ .wb-nm-actions .el-button{ min-height:44px; } }   /* 窄屏触摸目标，桌面保持小号 */
     .wb-fade-enter-active,.wb-fade-leave-active{ transition:opacity .2s; }
     .wb-fade-enter-from,.wb-fade-leave-to{ opacity:0; }
@@ -500,87 +537,87 @@ const GUARDS = [
 // 工单池（种子）
 const SEED_ORDERS = [
   { id:'WO-1042', source:'异常排查', reporter:'赵班长', reporterRole:'班组长', session:'S-2207',
-    summary:'P55 Array 区域 Mura 良率下掉，疑似曝光能量偏移', status:'closed', handler:'李工程师',
+    prodOrder:'PO-77188', summary:'P55 Array 区域 Mura 良率下掉，疑似曝光能量偏移', status:'closed', handler:'李工程师',
     priority:'高', risk:'高', tags:['历史复盘'], created:'2026-03-18 09:12', deadline:'2026-03-18 09:42', deadlineTs:null, comments:[],
     closed:'2026-03-19 17:30', timeline:[
       {t:'2026-03-18 09:12',e:'赵班长提报工单'},{t:'2026-03-18 09:40',e:'李工程师承接'},
       {t:'2026-03-19 17:30',e:'李工程师闭环：更换涂布头'} ] },
   { id:'WO-1091', source:'系统复合异常', reporter:'RAG系统', reporterRole:'系统', session:'S-3310',
-    summary:'CF M32 检测到烤箱温度+膜厚耦合漂移（复合异常）', status:'pending_supervisor', handler:'',
+    prodOrder:'PO-77203', summary:'CF M32 检测到烤箱温度+膜厚耦合漂移（复合异常）', status:'pending_supervisor', handler:'',
     priority:'紧急', risk:'高', tags:['复合异常','系统识别','复合疑难'], created:'2026-08-01 14:05', deadline:'2026-08-01 14:35', deadlineTs:(Date.now()+25*60000), comments:[],
     closed:'', timeline:[ {t:'2026-08-01 14:05',e:'系统识别复合异常，直推主管介入池，双向推送工程师群+主管群'} ] },
   { id:'WO-1092', source:'人工求助', reporter:'孙班长', reporterRole:'班组长', session:'',
-    summary:'夜班 M32 亮点异常，请求工程师协助判定', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77231', summary:'夜班 M32 亮点异常，请求工程师协助判定', status:'pending_engineer', handler:'',
     priority:'中', risk:'中', tags:['夜间上报'], created:'2026-08-02 01:20', deadline:'—（夜间暂停）', deadlineTs:null, comments:[],
     closed:'', timeline:[ {t:'2026-08-02 01:20',e:'孙班长夜班提报，打【夜间上报】，暂停超时'} ] },
 
   /* —— 以下为扩展演示工单（展示多场景：待承接/处理中/已闭环/夜间暂停/紧急穿透/超时升级/复合异常）—— */
   { id:'WO-1085', source:'异常排查', reporter:'赵班长', reporterRole:'班组长', session:'S-2207',
-    summary:'P55 Array 曝光能量 31.0 mJ 偏高，Mura 加重', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77188', summary:'P55 Array 曝光能量 31.0 mJ 偏高，Mura 加重', status:'pending_engineer', handler:'',
     priority:'高', risk:'高', tags:['良率异常'], created:'2026-08-03 08:50', deadline:'', deadlineTs:Date.now()+13*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-03 08:50',e:'赵班长提报：P55 曝光能量偏高'} ] },
   { id:'WO-1077', source:'异常排查', reporter:'李工程师', reporterRole:'工程师', session:'S-2207',
-    summary:'P55 Mura 已确认曝光头衰减，安排更换', status:'processing', handler:'李工程师',
+    prodOrder:'PO-77188', summary:'P55 Mura 已确认曝光头衰减，安排更换', status:'processing', handler:'李工程师',
     priority:'高', risk:'高', tags:['处理中'], created:'2026-08-03 09:30', deadline:'', deadlineTs:Date.now()+40*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-03 09:30',e:'李工程师承接并处理中'} ] },
   { id:'WO-1063', source:'人工求助', reporter:'王主管', reporterRole:'主管', session:'',
-    summary:'Cell 段液晶滴注量漂移，已复核放行', status:'closed', handler:'王主管',
+    prodOrder:'PO-77412', summary:'Cell 段液晶滴注量漂移，已复核放行', status:'closed', handler:'王主管',
     priority:'中', risk:'中', tags:['主管复核'], created:'2026-08-03 10:10', deadline:'', deadlineTs:null, comments:[],
     closed:'2026-08-03 15:20', timeline:[ {t:'2026-08-03 10:10',e:'王主管接手'}, {t:'2026-08-03 15:20',e:'闭环：复核放行'} ] },
   { id:'WO-1055', source:'系统复合异常', reporter:'RAG系统', reporterRole:'系统', session:'S-3310',
-    summary:'CF M32 温度+膜厚耦合漂移（复合异常）', status:'pending_supervisor', handler:'',
+    prodOrder:'PO-77203', summary:'CF M32 温度+膜厚耦合漂移（复合异常）', status:'pending_supervisor', handler:'',
     priority:'紧急', risk:'高', tags:['复合异常','系统识别','复合疑难'], created:'2026-08-04 11:00', deadline:'', deadlineTs:Date.now()+30*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-04 11:00',e:'系统识别复合异常，直推主管介入池'} ] },
   { id:'WO-1100', source:'人工求助', reporter:'孙班长', reporterRole:'班组长', session:'',
-    summary:'夜班 Array 暗斑，请求工程师协助', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77035', summary:'夜班 Array 暗斑，请求工程师协助', status:'pending_engineer', handler:'',
     priority:'中', risk:'中', tags:['夜间上报'], created:'2026-08-04 23:40', deadline:'—（夜间暂停）', deadlineTs:null, comments:[],
     closed:'', timeline:[ {t:'2026-08-04 23:40',e:'孙班长夜班提报，打【夜间上报】，暂停超时'} ] },
   { id:'WO-1101', source:'人工求助', reporter:'钱班长', reporterRole:'班组长', session:'',
-    summary:'夜班 CF 亮点批量，疑似来料异常', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77240', summary:'夜班 CF 亮点批量，疑似来料异常', status:'pending_engineer', handler:'',
     priority:'中', risk:'低', tags:['夜间上报'], created:'2026-08-05 00:15', deadline:'—（夜间暂停）', deadlineTs:null, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 00:15',e:'钱班长夜班提报，打【夜间上报】，暂停超时'} ] },
   { id:'WO-1102', source:'人工求助', reporter:'赵班长', reporterRole:'班组长', session:'',
-    summary:'P55 紧急停线：连续 3 片亮点良率跌破基线', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77050', summary:'P55 紧急停线：连续 3 片亮点良率跌破基线', status:'pending_engineer', handler:'',
     priority:'紧急', risk:'高', tags:['紧急停线/重大良率事故'], created:'2026-08-05 09:05', deadline:'', deadlineTs:Date.now()+8*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 09:05',e:'赵班长勾选紧急停线，即时推送工程师群+主管群'} ] },
   { id:'WO-1103', source:'人工求助', reporter:'钱班长', reporterRole:'班组长', session:'',
-    summary:'夜间紧急：M32 烤箱超温停线', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77245', summary:'夜间紧急：M32 烤箱超温停线', status:'pending_engineer', handler:'',
     priority:'紧急', risk:'高', tags:['紧急停线/重大良率事故','夜间上报'], created:'2026-08-05 01:30', deadline:'', deadlineTs:Date.now()+22*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 01:30',e:'夜间紧急穿透：即时推送，30分钟超时正常执行'} ] },
   { id:'WO-1104', source:'异常排查', reporter:'赵班长', reporterRole:'班组长', session:'',
-    summary:'CF M32 烤箱温度 240℃ 超上限', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77203', summary:'CF M32 烤箱温度 240℃ 超上限', status:'pending_engineer', handler:'',
     priority:'高', risk:'高', tags:['良率异常'], created:'2026-08-05 10:20', deadline:'', deadlineTs:Date.now()+26*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 10:20',e:'赵班长提报：烤箱温度超上限'} ] },
   { id:'WO-1105', source:'异常排查', reporter:'周工程师', reporterRole:'工程师', session:'',
-    summary:'Cell M32 液晶滴注量 3.7μl 偏低排查', status:'processing', handler:'周工程师',
+    prodOrder:'PO-77418', summary:'Cell M32 液晶滴注量 3.7μl 偏低排查', status:'processing', handler:'周工程师',
     priority:'中', risk:'中', tags:['处理中'], created:'2026-08-05 10:40', deadline:'', deadlineTs:Date.now()+5*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 10:40',e:'周工程师承接并处理中'} ] },
   { id:'WO-1106', source:'人工求助', reporter:'王主管', reporterRole:'主管', session:'',
-    summary:'Array 段涂布头转办复核完成', status:'closed', handler:'王主管',
+    prodOrder:'PO-77021', summary:'Array 段涂布头转办复核完成', status:'closed', handler:'王主管',
     priority:'高', risk:'高', tags:['主管转办'], created:'2026-08-05 11:00', deadline:'', deadlineTs:null, comments:[],
     closed:'2026-08-05 16:30', timeline:[ {t:'2026-08-05 11:00',e:'王主管转办并接手'}, {t:'2026-08-05 16:30',e:'闭环'} ] },
   { id:'WO-1107', source:'人工求助', reporter:'钱班长', reporterRole:'班组长', session:'',
-    summary:'P55 暗斑复查，已恢复正常', status:'closed', handler:'李工程师',
+    prodOrder:'PO-77060', summary:'P55 暗斑复查，已恢复正常', status:'closed', handler:'李工程师',
     priority:'低', risk:'低', tags:['已闭环'], created:'2026-08-05 13:10', deadline:'', deadlineTs:null, comments:[],
     closed:'2026-08-05 18:00', timeline:[ {t:'2026-08-05 13:10',e:'钱班长提报'}, {t:'2026-08-05 13:40',e:'李工程师承接'}, {t:'2026-08-05 18:00',e:'闭环'} ] },
   { id:'WO-1108', source:'异常排查', reporter:'孙班长', reporterRole:'班组长', session:'',
-    summary:'Array 断线率突增，30分钟未接单已升级', status:'pending_supervisor', handler:'',
+    prodOrder:'PO-77065', summary:'Array 断线率突增，30分钟未接单已升级', status:'pending_supervisor', handler:'',
     priority:'高', risk:'高', tags:['超时升级'], created:'2026-08-05 07:30', deadline:'', deadlineTs:Date.now()-5*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 07:30',e:'孙班长提报'}, {t:'2026-08-05 08:00',e:'30分钟未接单，自动升级至主管介入池'} ] },
   { id:'WO-1109', source:'人工求助', reporter:'赵班长', reporterRole:'班组长', session:'',
-    summary:'夜班 P55 曝光能量 30.5 mJ 偏高', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77070', summary:'夜班 P55 曝光能量 30.5 mJ 偏高', status:'pending_engineer', handler:'',
     priority:'中', risk:'高', tags:['夜间上报'], created:'2026-08-05 02:10', deadline:'—（夜间暂停）', deadlineTs:null, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 02:10',e:'赵班长夜班提报，打【夜间上报】，暂停超时'} ] },
   { id:'WO-1110', source:'异常排查', reporter:'周工程师', reporterRole:'工程师', session:'',
-    summary:'CF 膜厚均匀性偏差复检', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77250', summary:'CF 膜厚均匀性偏差复检', status:'pending_engineer', handler:'',
     priority:'中', risk:'中', tags:['复检'], created:'2026-08-05 14:00', deadline:'', deadlineTs:Date.now()+18*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 14:00',e:'周工程师提交并等待承接'} ] },
   { id:'WO-1111', source:'系统复合异常', reporter:'RAG系统', reporterRole:'系统', session:'',
-    summary:'Array 曝光能量+涂布厚度耦合漂移（复合异常）', status:'pending_supervisor', handler:'',
+    prodOrder:'PO-77021', summary:'Array 曝光能量+涂布厚度耦合漂移（复合异常）', status:'pending_supervisor', handler:'',
     priority:'紧急', risk:'高', tags:['复合异常','系统识别','复合疑难'], created:'2026-08-05 14:30', deadline:'', deadlineTs:Date.now()+33*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 14:30',e:'系统识别复合异常，直推主管介入池'} ] },
   { id:'WO-1112', source:'人工求助', reporter:'钱班长', reporterRole:'班组长', session:'',
-    summary:'Cell 暗斑偶发，请求工艺确认', status:'pending_engineer', handler:'',
+    prodOrder:'PO-77425', summary:'Cell 暗斑偶发，请求工艺确认', status:'pending_engineer', handler:'',
     priority:'低', risk:'低', tags:['良率异常'], created:'2026-08-05 15:00', deadline:'', deadlineTs:Date.now()+50*60000, comments:[],
     closed:'', timeline:[ {t:'2026-08-05 15:00',e:'钱班长提报'} ] }
 ];
@@ -588,10 +625,10 @@ const SEED_ORDERS = [
 // 会话存档种子
 // 4 条种子存档分别对应首页案例 1-4；messages 由下方「按案例模拟」代码填充
 const SEED_SESSIONS = [
-  { id:'S-2201', title:'Array P55 模糊提问上下文补全', time:'2026-03-18 08:42', risk:'中', status:'已闭环', orderTag:'', messages:[] },
-  { id:'S-2207', title:'P55 Mura 良率排查会话', time:'2026-03-18 09:10', risk:'高', status:'已闭环', orderTag:'WO-1042', messages:[] },
-  { id:'S-3310', title:'CF 温度耦合漂移分析', time:'2026-08-01 14:00', risk:'高', status:'已存档', orderTag:'WO-1091', messages:[] },
-  { id:'S-4402', title:'知识库零命中兜底会话', time:'2026-08-21 16:35', risk:'低', status:'已存档', orderTag:'', messages:[] }
+  { id:'S-2201', title:'Array P55 模糊提问上下文补全', time:'2026-03-18 08:42', risk:'中', status:'已闭环', orderTag:'', prodOrder:'PO-77021', source:'手动存档', messages:[] },
+  { id:'S-2207', title:'P55 Mura 良率排查会话', time:'2026-03-18 09:10', risk:'高', status:'已闭环', orderTag:'WO-1042', prodOrder:'PO-77188', source:'手动存档', messages:[] },
+  { id:'S-3310', title:'CF 温度耦合漂移分析', time:'2026-08-01 14:00', risk:'高', status:'已存档', orderTag:'WO-1091', prodOrder:'PO-77203', source:'手动存档', messages:[] },
+  { id:'S-4402', title:'知识库零命中兜底会话', time:'2026-08-21 16:35', risk:'低', status:'已存档', orderTag:'', prodOrder:'', source:'手动存档', messages:[] }
 ];
 
 // 审计日志种子
@@ -766,6 +803,18 @@ const store = reactive({
   // QA 运行时
   messages: [],
   currentSessionTitle: '',
+  archivedCurrent: false,   // 当前进行中的对话是否已经落档（登出去重，避免同一会话被重复兜底）
+  currentArchiveId: '',     // 当前进行中对话对应的存档条目 ID（提交工单时据此回填工单号）
+  // 人工求助工单草稿：提升到全局，跨「问答页 → 会话存档页 → 问答页」保留已填内容；
+  // visible 也放这里，问答页组件被 v-if 卸载后弹窗状态不会丢。
+  helpDraft: {
+    visible:false, summary:'', session:'', urgent:false, noMatch:false,
+    pickMode:false,         // true = 会话存档页正处于「选择关联会话」模式
+    prodOrder:''            // 提交人工求助工单时填写的「相关生产工单」号（如 PO-77021）
+  },
+  // 会话存档筛选：提升到全局，跨「问答页 → 会话存档页 → 问答页」保留条件。
+  // time 为 [起始, 结束] 字符串（YYYY-MM-DD HH:mm，精确到分）；空数组 = 不限时间。
+  archiveFilter: { risk:'', status:'', time:[] },
   // 用户反馈汇总：所有气泡的 👍 / 👎 统一写入，评测管理后台【用户反馈汇总】读取同一份数据
   feedback: [...SEED_FEEDBACK],
   // 站内通知与内置问卷：运营下发、全员接收；问卷只由消息卡片主动唤起，页面无常驻入口
@@ -883,13 +932,41 @@ function clearContext(silent, reason){
 
 function logout(reason){
   if(reason) EP.ElMessage({ type:'info', message: reason });
+  // 登出兜底：进行中的高/中风险会话若尚未存档，先自动落档（必须在清空 messages 之前，否则快照为空）；低风险不兜底
+  let autoArc = null;
+  if(store.messages.length && (store.lastRisk==='高' || store.lastRisk==='中') && !store.archivedCurrent){
+    autoArc = archiveCurrentConversation({ source:'登出自动', silent:true });
+  }
   store.user = null;
   store.currentPage = 'qa';
   store.history = [];
   store.messages = [];
+  // 切换角色 / 登出：清空工单草稿与关联选择模式，避免浮层状态泄漏到下一个用户会话
+  Object.assign(store.helpDraft, { visible:false, summary:'', session:'', urgent:false, noMatch:false, pickMode:false });
+  // 切换角色 / 登出：同时清空会话存档筛选，避免上一个用户的查询状态带到下一个用户
+  store.archiveFilter.risk=''; store.archiveFilter.status=''; store.archiveFilter.time=[];
   resetFollowChain();
   store.followRisk.sessionRisk = false;
   stopTimers();
+  if(autoArc) EP.ElMessage.info('已自动存档本次高风险会话（登出兜底）');
+}
+/* 自动/手动落档统一入口：把当前对话窗快照写入会话存档表。
+   opts.source: 手动存档 | 工单关联 | 登出自动；opts.orderTag: 关联工单号；opts.silent: 静默不提示；
+   opts.status: 覆盖状态（默认 已存档）；opts.toast: 自定义成功提示。返回新建条目或 null。
+   archivedCurrent / currentArchiveId 用于登出去重，避免同一会话被重复兜底。 */
+function archiveCurrentConversation(opts){
+  opts = opts || {};
+  if(!store.messages.length){ if(!opts.silent) EP.ElMessage.warning('当前没有可存档的会话'); return null; }
+  const id = 'S-'+Math.floor(Math.random()*9000+1000);
+  const title = store.currentSessionTitle || ('会话 '+id);
+    const entry = { id, title, time:now(), risk:store.lastRisk, status:opts.status||'已存档',
+    orderTag:opts.orderTag||'', prodOrder:opts.prodOrder||'', source:opts.source||'手动存档',
+    messages: store.messages.map(m=>({...m})) };   // 存档时保存逐条聊天记录快照，供【详情】查看
+  store.sessions.unshift(entry);
+  store.archivedCurrent = true;
+  store.currentArchiveId = id;
+  if(!opts.silent) EP.ElMessage.success(opts.toast || ('会话已存档：'+id));
+  return entry;
 }
 
 function createWorkOrder(payload){
@@ -899,7 +976,8 @@ function createWorkOrder(payload){
     id, source: payload.source||'人工求助', reporter: payload.reporter||store.user.name,
     reporterRole: payload.reporterRole||ROLES[store.user.role].short, session: payload.session||'',
     summary: payload.summary||'', status:'pending_engineer', handler:'', priority: payload.priority||'中',
-    risk: payload.risk||'中', tags: [], created: now(), deadline:'', deadlineTs:null, comments:[], closed:'', timeline:[]
+    risk: payload.risk||'中', tags: [], created: now(), deadline:'', deadlineTs:null, comments:[], closed:'', timeline:[],
+    prodOrder: payload.prodOrder||''
   };
   // AI 识别复合异常自动生成的紧急工单：打【复合疑难】，不走紧急停线穿透分支
   if(payload.source==='系统复合异常') order.tags.push('复合疑难');
@@ -1528,16 +1606,23 @@ const QaPage = {
 
     <!-- 人工求助工单弹窗 -->
     <el-dialog v-model="helpVisible" title="提交人工求助工单" width="520px">
-      <el-form label-width="92px">
+      <el-form label-width="112px">
         <el-form-item label="问题摘要"><el-input v-model="help.summary" type="textarea" :rows="3" placeholder="描述异常现象与已排查信息" /></el-form-item>
+        <el-form-item label="相关生产工单"><el-input v-model="help.prodOrder" placeholder="如 PO-77021，可填写与本异常相关的生产工单号" /></el-form-item>
         <div v-if="help.noMatch" class="wb-nm-tag" style="margin:-4px 0 10px 92px;">已带入当前提问 · 提交后自动打上标签「知识库未命中」</div>
-        <el-form-item label="关联会话"><el-input v-model="help.session" placeholder="可选，如 S-3310" /></el-form-item>
+        <el-form-item label="关联会话">
+          <div class="wb-help-session">
+            <el-input v-model="help.session" placeholder="默认关联当前对话" />
+            <el-button size="small" type="primary" plain title="前往会话存档选择要关联的对话" @click="searchSession">搜索</el-button>
+          </div>
+        </el-form-item>
+        <div class="wb-help-hint">默认关联当前对话；如需关联其他会话，点【搜索】前往会话存档选择。</div>
         <el-form-item label="紧急程度">
           <el-checkbox v-model="help.urgent">紧急停线 / 重大良率事故（穿透机制）</el-checkbox>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="helpVisible=false">取消</el-button>
+        <el-button @click="closeHelp">取消</el-button>
         <el-button type="primary" @click="submitHelp">提交并推送</el-button>
       </template>
     </el-dialog>
@@ -1545,8 +1630,14 @@ const QaPage = {
   setup(){
     const input = ref('');
     const chat = ref(null);
-    const helpVisible = ref(false);
-    const help = reactive({ summary:'', session:'', urgent:false, noMatch:false });
+    // 草稿与弹窗开关放在全局 store：问答页被卸载（去会话存档页选关联会话）后，已填内容与弹窗状态不丢
+    const helpVisible = computed({ get:()=>store.helpDraft.visible, set:v=>{ store.helpDraft.visible=v; } });
+    const help = store.helpDraft;
+    // 「当前这个对话」= 首页进行中、尚未存档的会话；有标题时带出标题，便于工单回溯
+    function currentSessionLabel(){
+      const t = (store.currentSessionTitle||'').trim();
+      return t ? '当前对话（进行中） · '+t : '当前对话（进行中）';
+    }
     const streaming = ref(false);
     let streamTimer = null;
     let streamCase = null;
@@ -1711,7 +1802,7 @@ const QaPage = {
       stopStream();
       const c = CASE_SCRIPTS[id];
       streamCase = { c, idx:0, done:false };
-      store.messages = []; clearContext(true); setRisk('低');
+      store.messages = []; clearContext(true); setRisk('低'); store.archivedCurrent=false; store.currentArchiveId='';
       store.followRisk.sessionRisk = false;   // 切换案例 = 开启新会话
       streaming.value = true;
       pushNext();
@@ -1728,22 +1819,32 @@ const QaPage = {
       scroll();
     }
 
-    function archiveSession(){
-      if(!store.messages.length){ EP.ElMessage.warning('当前没有可存档的会话'); return; }
-      const id = 'S-'+Math.floor(Math.random()*9000+1000);
-      const title = store.currentSessionTitle || ('会话 '+id);
-      store.sessions.unshift({ id, title, time:now(), risk:store.lastRisk, status:'已存档', orderTag:'',
-        messages: store.messages.map(m=>({...m})) });   // 存档时保存逐条聊天记录快照，供【详情】查看
-      EP.ElMessage.success('会话已存档：'+id);
-    }
+    function archiveSession(){ return archiveCurrentConversation({ source:'手动存档' }); }
 
-    function openHelp(){ help.noMatch=false; helpVisible.value=true; }
+    // 打开弹窗：默认关联「当前这个对话」；每次打开重置草稿，避免上次填写内容串到新工单
+    function openHelp(){
+      Object.assign(help, { summary:'', session:currentSessionLabel(), urgent:false, noMatch:false, pickMode:false, prodOrder:'' });
+      helpVisible.value = true;
+    }
+    function closeHelp(){ helpVisible.value=false; help.pickMode=false; }
+    // 【搜索】：进入会话存档页选择要关联的会话；先关弹窗，避免问答页组件卸载后 overlay 残留
+    function searchSession(){
+      if(!canView('archive')){
+        EP.ElMessage.warning('当前角色无会话存档查看权限，已保留默认关联当前对话');
+        return;
+      }
+      help.pickMode = true;
+      helpVisible.value = false;
+      store.history.push(store.currentPage);
+      store.currentPage = 'archive';
+    }
     // 分级追问风控上限按钮：沿用既有「提交人工求助工单」弹窗，不新增流程
     function openFollowOrder(){ openHelp(); }
     // 【新开对话】：开启全新会话，链路计数器与【风险会话】标记一并清除
     function startNewChat(){
       stopStream();
       store.messages = [];
+      store.archivedCurrent=false; store.currentArchiveId='';   // 新会话：当前对话身份重置，去重标记清零
       clearContext(true);                     // 连带全部高危链路计数器清零
       store.followRisk.sessionRisk = false;  // 新会话：不再标记为风险会话
       store.currentSessionTitle = '';
@@ -1753,9 +1854,9 @@ const QaPage = {
     }
     // 兜底气泡「转人工咨询」：带入原始提问，标记提交时打「知识库未命中」标签
     function openHelpFromNoMatch(q){
+      openHelp();                              // 同样默认关联当前对话
       help.summary = q || '';
       help.noMatch = true;
-      helpVisible.value = true;
     }
     // 兜底气泡「重新提问」：只清空输入框，不改动输入框本身与既有逻辑
     function reAsk(){
@@ -1764,7 +1865,7 @@ const QaPage = {
     }
     function submitHelp(){
       if(!help.summary){ EP.ElMessage.warning('请填写问题摘要'); return; }
-      const o = createWorkOrder({ source:'人工求助', summary:help.summary, session:help.session, urgent:help.urgent, risk:help.urgent?'高':'中', priority:help.urgent?'紧急':'中' });
+      const o = createWorkOrder({ source:'人工求助', summary:help.summary, session:help.session, urgent:help.urgent, risk:help.urgent?'高':'中', priority:help.urgent?'紧急':'中', prodOrder:help.prodOrder });
       if(help.noMatch){
         o.tags.push('知识库未命中');
         o.timeline.push({ t:now(), e:'来源：智能问答「无可信检索来源」兜底转人工，已带入原始提问' });
@@ -1775,14 +1876,29 @@ const QaPage = {
           wecomPush(['本人'],'夜间提交提示','当前为工艺工程师非在岗时段，工单已登记，将在次日上班后统一安排处理；紧急重大良率事故请走现场电话应急通道。');
         }
       }
-      helpVisible.value=false; help.summary=''; help.session=''; help.urgent=false; help.noMatch=false;
+      // 自动落档：工单已关联当前/所选会话，确保该会话进入存档表并绑定工单号（修复「关联了但不落档」的逻辑断点）
+      const sessRef = (help.session||'').trim();
+      if(sessRef.indexOf('S-')===0){
+        const sid = sessRef.split(/\s+·\s+/)[0];
+        const ex = store.sessions.find(s=>s.id===sid);
+        if(ex){ ex.orderTag = o.id; ex.prodOrder = help.prodOrder||ex.prodOrder; if(ex.source==='手动存档') ex.source='工单关联'; }
+      } else if(sessRef.indexOf('当前对话')>=0){
+        if(!store.archivedCurrent){
+          archiveCurrentConversation({ source:'工单关联', orderTag:o.id, prodOrder:help.prodOrder });
+        } else if(store.currentArchiveId){
+          const ex = store.sessions.find(s=>s.id===store.currentArchiveId);
+          if(ex){ ex.orderTag = o.id; ex.prodOrder = help.prodOrder||ex.prodOrder; if(ex.source==='手动存档') ex.source='工单关联'; }
+        }
+      }
+      helpVisible.value=false;
+      Object.assign(help, { summary:'', session:'', urgent:false, noMatch:false, pickMode:false, prodOrder:'' });
       EP.ElMessage.success('工单已提交：'+o.id+(o.tags.includes('夜间上报')?'（已打夜间上报）':''));
     }
 
     function simCtxTimeout(){ clearContext(false, 'timeout'); }
     function simLoginTimeout(){ logout('模拟登录超时：60 分钟无操作已强制登出'); }
 
-    return { input, chat, helpVisible, help, cases, sessionList, hasCtx, riskColor, riskText, isNight, isLead, mask, streaming, send, askClearCtx, clearCtx, playCase, skipStream, archiveSession, openHelp, openFollowOrder, startNewChat, openHelpFromNoMatch, reAsk, submitHelp, simCtxTimeout, simLoginTimeout, capNotice:FB_CAP_MSG, questionAt, lastQuestion, store };
+    return { input, chat, helpVisible, help, cases, sessionList, hasCtx, riskColor, riskText, isNight, isLead, mask, streaming, send, askClearCtx, clearCtx, playCase, skipStream, archiveSession, openHelp, closeHelp, searchSession, openFollowOrder, startNewChat, openHelpFromNoMatch, reAsk, submitHelp, simCtxTimeout, simLoginTimeout, capNotice:FB_CAP_MSG, questionAt, lastQuestion, store };
   }
 };
 
@@ -1791,8 +1907,47 @@ const ArchivePage = {
   template:`
   <div class="wb-card" style="padding:16px;">
     <div class="wb-section-title">我的会话存档</div>
-    <el-table :data="$sorted(store.sessions, 'archive', 'time')" border style="width:100%">
+    <!-- 工单关联选择态：仅从「提交人工求助工单 → 搜索」进入时出现 -->
+    <div v-if="pickMode" class="wb-pick-bar" role="status">
+      <span class="wb-pick-txt">工单关联：请选择要关联的会话；选中后自动返回工单弹窗，已填写内容会保留。</span>
+      <el-button size="small" title="不选择，返回工单弹窗并保持原有关联会话" @click="cancelPick">取消选择</el-button>
+    </div>
+    <!-- 筛选：风险等级 / 状态 / 时间（可键盘输入或点选，精确到年-月-日 时:分） -->
+    <div class="wb-arc-filter" role="search" aria-label="会话存档筛选">
+      <el-select v-model="af.risk" placeholder="风险等级" clearable aria-label="按风险等级筛选" style="width:132px;">
+        <el-option v-for="r in riskOptions" :key="r" :label="r" :value="r" />
+      </el-select>
+      <el-select v-model="af.status" placeholder="状态" clearable aria-label="按状态筛选" style="width:132px;">
+        <el-option v-for="s in statusOptions" :key="s" :label="s" :value="s" />
+      </el-select>
+      <el-date-picker v-model="af.time" type="datetimerange"
+        format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DD HH:mm"
+        range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间"
+        :editable="true" :clearable="true" aria-label="按会话时间范围筛选" style="width:352px;" />
+      <el-button @click="resetFilters" aria-label="重置筛选条件">重置</el-button>
+      <span class="wb-arc-count" aria-live="polite">{{ filterSummary }}</span>
+    </div>
+    <div class="wb-arc-hint">时间支持输入或选择「年-月-日 时:分」，如 2026-08-01 14:00；起止都填时按区间筛选，结束分钟内的会话也包含在内。</div>
+    <!-- 选择关联会话时，活跃筛选可能隐藏目标会话：给一条可恢复的路径 -->
+    <div v-if="pickMode && hasFilter" class="wb-arc-pick-hint" role="status">
+      当前筛选条件可能隐藏部分会话，选择关联前可
+      <el-button type="primary" link size="small" @click="resetFilters">清空筛选</el-button>
+      查看全部会话。
+    </div>
+    <el-table v-if="filtered.length" :data="$sorted(filtered, 'archive', 'time')" border style="width:100%">
       <el-table-column prop="id" label="会话ID" width="110" />
+      <el-table-column label="人工求助工单" width="130">
+        <template #default="{row}">
+          <el-button v-if="row.orderTag" type="primary" link size="small" @click="viewOrder(row.orderTag)">{{row.orderTag}}</el-button>
+          <span v-else class="wb-mini">—</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="生产工单" width="130">
+        <template #default="{row}">
+          <span v-if="row.prodOrder" class="wb-prod-order">{{row.prodOrder}}</span>
+          <span v-else class="wb-mini">—</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="title" label="标题" min-width="200" />
       <el-table-column prop="time" width="170">
         <template #header><time-sort-header label="时间" sort-key="archive"/></template>
@@ -1801,22 +1956,25 @@ const ArchivePage = {
         <template #default="{row}"><span :class="riskCls(row.risk)">{{row.risk}}</span></template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100" />
-      <el-table-column label="关联工单" width="130">
+      <el-table-column label="来源" width="110">
         <template #default="{row}">
-          <el-button v-if="row.orderTag" type="primary" link size="small" @click="viewOrder(row.orderTag)">{{row.orderTag}}</el-button>
-          <span v-else class="wb-mini">—</span>
+          <span class="wb-src-tag" :class="{'wb-src-tag--manual':row.source==='手动存档','wb-src-tag--ticket':row.source==='工单关联','wb-src-tag--auto':row.source==='登出自动'}">{{ row.source || '手动存档' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="320">
         <template #default="{row}">
-          <el-button size="small" type="primary" plain @click="openDetail(row)">详情</el-button>
-          <el-button size="small" @click="resume(row)">继续</el-button>
-          <el-button size="small" @click="goAudit">审计</el-button>
-          <el-button size="small" @click="exportS(row)">导出</el-button>
-          <el-popconfirm title="确认删除该存档？" @confirm="del(row)"><template #reference><el-button size="small" type="danger" plain>删除</el-button></template></el-popconfirm>
+          <el-button v-if="pickMode" size="small" type="primary" :aria-label="'选择关联 '+row.id" @click="pickSession(row)">选择关联</el-button>
+          <template v-if="!pickMode">
+            <el-button size="small" type="primary" plain @click="openDetail(row)">详情</el-button>
+            <el-button size="small" @click="resume(row)">继续</el-button>
+            <el-button size="small" @click="goAudit">审计</el-button>
+            <el-button size="small" @click="exportS(row)">导出</el-button>
+            <el-popconfirm title="确认删除该存档？" @confirm="del(row)"><template #reference><el-button size="small" type="danger" plain>删除</el-button></template></el-popconfirm>
+          </template>
         </template>
       </el-table-column>
     </el-table>
+    <el-empty v-else description="当前筛选条件下暂无会话存档" />
 
     <!-- 会话详情：逐条完整聊天记录（只读回放，不提供交互按钮） -->
     <el-dialog v-model="dv" :title="'会话详情 · '+(ds?ds.title:'')" width="720px" top="6vh">
@@ -1826,7 +1984,7 @@ const ArchivePage = {
           <span>时间：<b>{{ds.time}}</b></span>
           <span>风险等级：<b :class="riskCls(ds.risk)">{{ds.risk}}</b></span>
           <span>状态：<b>{{ds.status}}</b></span>
-          <span>关联工单：<b>{{ds.orderTag||'—'}}</b></span>
+          <span>人工求助工单：<b>{{ds.orderTag||'—'}}</b></span>
         </div>
         <div class="wb-section-title" style="margin:12px 0 8px;">逐条聊天记录（{{ds.messages ? ds.messages.length : 0}} 条）</div>
         <div class="wb-archive-log">
@@ -1854,7 +2012,8 @@ const ArchivePage = {
 
     <el-dialog v-model="ov" title="工单详情" width="560px">
       <el-descriptions :column="1" border v-if="cur">
-        <el-descriptions-item label="工单ID">{{cur.id}}</el-descriptions-item>
+        <el-descriptions-item label="人工求助工单ID">{{cur.id}}</el-descriptions-item>
+        <el-descriptions-item label="生产工单">{{cur.prodOrder||'—'}}</el-descriptions-item>
         <el-descriptions-item label="来源">{{cur.source}}</el-descriptions-item>
         <el-descriptions-item label="提报人">{{cur.reporter}}（{{cur.reporterRole}}）</el-descriptions-item>
         <el-descriptions-item label="问题摘要">{{cur.summary}}</el-descriptions-item>
@@ -1871,6 +2030,36 @@ const ArchivePage = {
   setup(){
     const ov=ref(false); const cur=ref(null);
     const dv=ref(false); const ds=ref(null);
+    /* ---- 会话存档筛选（风险等级 / 状态 / 时间区间）---- */
+    const af = store.archiveFilter;               // 全局状态：离开本页再回来条件不丢
+    const riskOptions = ['高','中','低'];
+    const statusOptions = computed(()=>{
+      const base = ['已闭环','已存档'];
+      const extra = [...new Set((store.sessions||[]).map(s=>s.status).filter(Boolean))]
+        .filter(s=>!base.includes(s));
+      return base.concat(extra);                 // 固定常用值 + 运行时新增状态
+    });
+    const hasFilter = computed(()=> !!(af.risk || af.status ||
+      (Array.isArray(af.time) && af.time.some(Boolean))));
+    const filtered = computed(()=>{
+      const t = Array.isArray(af.time) ? af.time : [];
+      const from = t[0] ? tsVal(t[0]) : 0;
+      const to   = t[1] ? tsVal(t[1]) + 59999 : 0;   // 结束分钟含秒内记录，避免同分钟会话被误排除
+      return (store.sessions||[]).filter(s=>{
+        if(af.risk && s.risk!==af.risk) return false;
+        if(af.status && s.status!==af.status) return false;
+        if(from && tsVal(s.time) < from) return false;
+        if(to && tsVal(s.time) > to) return false;
+        return true;
+      });
+    });
+    const filterSummary = computed(()=> hasFilter.value
+      ? '筛选结果 '+filtered.value.length+' / '+store.sessions.length+' 条'
+      : '共 '+store.sessions.length+' 条会话');
+    function resetFilters(){
+      af.risk=''; af.status=''; af.time=[];
+      EP.ElMessage.success('已重置会话存档筛选条件');
+    }
     function riskCls(r){ return r==='高'?'tag-high':r==='中'?'tag-mid':'tag-low'; }
     function roleName(r){ return r==='user'?'用户提问':r==='bot'?'AI 回答':r==='system'?'系统提示':r==='nomatch'?'零命中兜底':'消息'; }
     function openDetail(row){ ds.value=row; dv.value=true; }
@@ -1879,7 +2068,26 @@ const ArchivePage = {
     function goAudit(){ store.currentPage='audit'; }
     function exportS(row){ EP.ElMessage.success('已导出会话 '+row.id+'（演示）'); }
     function del(row){ store.sessions = store.sessions.filter(s=>s.id!==row.id); EP.ElMessage.success('已删除'); }
-    return { store, ov, cur, dv, ds, riskCls, roleName, openDetail, viewOrder, resume, goAudit, exportS, del, canSeeHighParam };
+    // 工单关联选择态：选中 / 取消都回到问答页并恢复弹窗，草稿内容（摘要、紧急程度）保留
+    const pickMode = computed(()=> store.helpDraft.pickMode);
+    function finishPick(msg){
+      const d = store.helpDraft;
+      d.pickMode = false;
+      d.visible = true;
+      if(store.history.length && store.history[store.history.length-1]==='qa') store.history.pop();
+      store.currentPage = 'qa';
+      if(msg) EP.ElMessage.success(msg);
+    }
+    function pickSession(row){
+      store.helpDraft.session = row.id + ' · ' + (row.title || row.id);
+      finishPick('已关联会话 '+row.id+'，可继续填写工单');
+    }
+    function cancelPick(){
+      finishPick();
+      EP.ElMessage.info('已取消选择，保持原有关联会话');
+    }
+    return { store, ov, cur, dv, ds, riskCls, roleName, openDetail, viewOrder, resume, goAudit, exportS, del, canSeeHighParam, pickMode, pickSession, cancelPick,
+      af, riskOptions, statusOptions, hasFilter, filtered, filterSummary, resetFilters };
   }
 };
 
@@ -2355,7 +2563,7 @@ const PoolPage = {
     </div>
 
     <el-table :data="paged" border style="width:100%" :row-class-name="rowCls">
-      <el-table-column prop="id" label="工单ID" width="96" />
+      <el-table-column prop="id" label="人工求助工单ID" width="120" />
       <el-table-column prop="created" width="104">
         <template #header><time-sort-header label="提交时间" sort-key="pool"/></template>
         <template #default="{row}">
@@ -2404,6 +2612,7 @@ const PoolPage = {
           <el-descriptions-item label="风险"><span :class="riskCls(cur.risk)">{{cur.risk}}</span></el-descriptions-item>
           <el-descriptions-item label="工单状态">{{statusText(cur.status)}}</el-descriptions-item>
           <el-descriptions-item label="当前处理角色">{{handlerRole(cur, true)}}</el-descriptions-item>
+          <el-descriptions-item label="生产工单">{{cur.prodOrder||'—'}}</el-descriptions-item>
           <el-descriptions-item label="工单创建时间">{{cur.created}}</el-descriptions-item>
           <el-descriptions-item label="计划超时截止时间">{{planDeadline(cur)}}</el-descriptions-item>
           <el-descriptions-item label="超时倒计时" :span="2">
@@ -2607,7 +2816,7 @@ const MinePage = {
     </div>
 
     <el-table :data="filtered" border style="width:100%" :row-class-name="rowCls">
-      <el-table-column prop="id" label="工单ID" width="96" />
+      <el-table-column prop="id" label="人工求助工单ID" width="120" />
       <el-table-column prop="created" width="104">
         <template #header><time-sort-header label="提交时间" sort-key="mine"/></template>
         <template #default="{row}">
@@ -2639,6 +2848,7 @@ const MinePage = {
           <el-descriptions-item label="风险"><span :class="riskCls(cur.risk)">{{cur.risk}}</span></el-descriptions-item>
           <el-descriptions-item label="工单状态">{{statusText(cur.status)}}</el-descriptions-item>
           <el-descriptions-item label="当前处理角色">{{handlerRole(cur, true)}}</el-descriptions-item>
+          <el-descriptions-item label="生产工单">{{cur.prodOrder||'—'}}</el-descriptions-item>
           <el-descriptions-item label="工单创建时间">{{cur.created}}</el-descriptions-item>
           <el-descriptions-item label="计划超时截止时间">{{planDeadline(cur)}}</el-descriptions-item>
           <el-descriptions-item label="超时倒计时" :span="2">
@@ -3054,7 +3264,14 @@ const App = {
     }
     function laterSurvey(){ surveyVisible.value=false; }   // 消息保留在列表内，可再次打开
     function onSurveyClosed(){ surveyNotice.value=null; }
-    watch(()=>store.currentPage, ()=> resetTableSort());   // 进入任一页面：所有时间列恢复默认倒序
+    // 进入任一页面：时间列恢复默认倒序；关联选择模式下若从侧栏离开会话存档页，收尾避免状态泄漏
+    watch(()=>store.currentPage, (p)=>{
+      resetTableSort();
+      if(store.helpDraft.pickMode && p!=='archive'){
+        store.helpDraft.pickMode = false;
+        store.helpDraft.visible = (p==='qa');   // 回问答页自动恢复弹窗；去其他页则关闭
+      }
+    });
     // 切换角色 / 登出：关闭消息中心与问卷浮层，避免浮层状态泄漏到下一个用户会话
     watch(()=>store.user, (u)=>{ if(!u){ noticeOpen.value=false; surveyVisible.value=false; surveyNotice.value=null; } });
     let timer=null;
