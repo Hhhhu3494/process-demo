@@ -42,10 +42,19 @@
     .wb-header{ background:#fff; border-bottom:1px solid var(--wb-line); display:flex; align-items:center; justify-content:space-between; padding:0 16px; height:56px; }
     .wb-main{ padding:var(--wb-main-pad); overflow:auto; height:calc(100vh - 56px); }
     .wb-head-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .wb-head-nav{ display:flex; align-items:center; gap:0; margin-right:0; }
+    .wb-head-nav .el-button + .el-button{ margin-left:0; }
+    .wb-head-icon.el-button{ border:none; background:transparent; box-shadow:none; padding:7px; min-width:34px; min-height:34px; color:var(--wb-sub); }
+    .wb-head-icon.el-button:hover:not(.is-disabled){ background:rgba(15,44,92,.06); }
+    .wb-head-icon.el-button:active:not(.is-disabled){ background:rgba(15,44,92,.12); }
+    .wb-head-icon.el-button:focus-visible{ outline:2px solid var(--wb-blue); outline-offset:1px; }
+    .wb-head-icon.el-button.is-disabled{ color:#c0c4cc; background:transparent; }
+    @media (max-width:768px){ .wb-head-icon.el-button{ min-width:44px; min-height:44px; } }
     .wb-head-right{ display:flex; align-items:center; gap:14px; flex-shrink:0; }
+    .wb-head-titles{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; min-width:0; line-height:1.25; }
     .wb-head-title{ font-weight:700; font-size:16px; white-space:nowrap; }
     .wb-logo-mini{ color:#fff; padding:18px 0; font-weight:800; font-size:15px; text-align:center; letter-spacing:1px; border-bottom:1px solid rgba(255,255,255,.18); }
-    .wb-crumb{ font-size:13px; }
+    .wb-crumb{ font-size:13px; margin-top:2px; }
     .wb-crumb-link{ color:var(--wb-blue); cursor:pointer; text-decoration:none; }
     .wb-crumb-link:hover{ text-decoration:underline; }
     .wb-crumb-cur{ color:var(--wb-sub); font-weight:600; }
@@ -3090,19 +3099,23 @@ const App = {
     <el-container>
       <el-header class="wb-header">
         <div class="wb-head-left">
-          <el-button size="small" circle @click="toggleSide" title="折叠 / 展开导航">
-            <el-icon><component :is="'Menu'"/></el-icon>
-          </el-button>
-          <el-button size="small" :disabled="!canBack" @click="back" title="返回上一个页面">
-            <el-icon><component :is="'ArrowLeft'"/></el-icon> 返回
-          </el-button>
-          <div class="wb-head-title">{{pageTitle}}</div>
-          <el-breadcrumb separator="/" class="wb-crumb wb-hide-narrow">
-            <el-breadcrumb-item v-for="(c,i) in crumbs" :key="i">
-              <span v-if="i===crumbs.length-1" class="wb-crumb-cur">{{c.label}}</span>
-              <a v-else href="javascript:void(0)" class="wb-crumb-link" @click="go(c.key)">{{c.label}}</a>
-            </el-breadcrumb-item>
-          </el-breadcrumb>
+          <div class="wb-head-nav">
+            <el-button class="wb-head-icon" @click="toggleSide" title="折叠 / 展开导航" aria-label="折叠或展开导航">
+              <el-icon><component :is="'Menu'"/></el-icon>
+            </el-button>
+            <el-button class="wb-head-icon" :disabled="!canBack" @click="back" title="返回上一个页面" aria-label="返回上一个页面">
+              <el-icon><component :is="'ArrowLeft'"/></el-icon>
+            </el-button>
+          </div>
+          <div class="wb-head-titles">
+            <div class="wb-head-title">{{pageTitle}}</div>
+            <el-breadcrumb separator="/" class="wb-crumb wb-hide-narrow">
+              <el-breadcrumb-item v-for="(c,i) in crumbs" :key="i">
+                <span v-if="i===crumbs.length-1" class="wb-crumb-cur">{{c.label}}</span>
+                <a v-else href="javascript:void(0)" class="wb-crumb-link" @click="go(c.key)">{{c.label}}</a>
+              </el-breadcrumb-item>
+            </el-breadcrumb>
+          </div>
         </div>
         <div class="wb-head-right">
           <span class="wb-mini wb-hide-narrow">🕐 {{clock}}</span>
