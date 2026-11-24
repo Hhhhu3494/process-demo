@@ -64,3 +64,9 @@ https://Hhhhu3494.github.io/process-demo/contract-demo/
 Vue 3.5.45 / Element Plus 2.7.0 / Element Plus Icons Vue 2.3.1 随包分发，均为各自开源许可。对外分发前请按项目实际合规要求核对许可与署名。
 
 > Pages 站点即使仓库设为私有也会公开到互联网，别放敏感数据。
+
+## 版权声明
+
+作者：Hhhhu3494 · 2026。本作品版权所有，详见 [LICENSE](LICENSE)。
+对外发布的 `index.html` 为压缩混淆版本，用于保护作品表达；作者保留完整源码与提交历史作为原创证明。
+请勿将本作品或其中任何部分作为自己的作品提交；引用或交流请注明作者。
